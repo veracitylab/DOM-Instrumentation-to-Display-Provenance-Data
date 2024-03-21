@@ -9,6 +9,7 @@ function responseUrls(details) {
 
 chrome.webRequest.onHeadersReceived.addListener(
   responseUrls,
-  {urls: ["<all_urls>"]}
+  {urls: ["<all_urls>"]},
+  ["responseHeaders"]
 );
 
