@@ -5,7 +5,8 @@ function responseUrls(details) {
     responseHeaders.push(JSON.stringify(details, null, 2));
     console.log("Saw HTTP request: " + JSON.stringify(details));		//DEBUG
   }
-  chrome.storage.session.set({key: responseHeaders});
+  // chrome.storage.session.set({key: responseHeaders});
+  chrome.tabs.sendMessage(details.tabId, { type: "responseHeader", details });
 }
 
 chrome.webRequest.onHeadersReceived.addListener(
