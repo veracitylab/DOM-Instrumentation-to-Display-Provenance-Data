@@ -1,13 +1,19 @@
 console.log("Content script running!");
 
-const responseList = document.createElement("div");
-responseList.style.position = 'fixed';
-responseList.style.top = '10px';
-responseList.style.left = '10px';
-responseList.style.zIndex = '1000'; // Hopefully on top of everything
-responseList.style.backgroundColor = 'green';
-responseList.innerHTML = '<span style="color: red; background-color: yellow">▶ Prov</span><ul></ul>';
-document.getElementsByTagName("body")[0].appendChild(responseList);
+const provenanceDiv = document.createElement("div");
+provenanceDiv.style.position = 'fixed';
+provenanceDiv.style.top = '10px';
+provenanceDiv.style.left = '10px';
+provenanceDiv.style.zIndex = '1000'; // Hopefully on top of everything
+provenanceDiv.style.backgroundColor = 'lightgray';
+provenanceDiv.style.padding = '10px';
+provenanceDiv.style.fontFamily = 'sans-serif';
+provenanceDiv.innerHTML = '<span style="color: red; font-weight: bold"">▶ Prov</span>';
+const provButton = provenanceDiv.children[0];
+const responseList = document.createElement("ul");
+responseList.style.display = 'none';
+provenanceDiv.appendChild(responseList);
+document.getElementsByTagName("body")[0].appendChild(provenanceDiv);
 
 chrome.runtime.onMessage.addListener((msg) => {
     console.log("Received message: ", msg);
@@ -28,13 +34,25 @@ function handleResponseHeader(responseHeader) {
 
 function addEntry(sourceUrl, provId) {
     const item = document.createElement("li");
-    item.innerHTML = `<a href="${provenanceUrl(sourceUrl, provId)}"><b>${provId}:</b> ${sourceUrl}</a>`;
-    responseList.children[0].appendChild(item);
+    item.innerHTML = `<a href="${provenanceUrl(sourceUrl, provId)}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
+    responseList.appendChild(item);
 }
 
 function provenanceUrl(sourceUrl, provId) {
     return (sourceUrl + "/").replace(/\/.*/, `/prov/${provId}`);
 }
+
+function toggleProvDisplay() {
+    if (responseList.style.display === 'none') {
+        provButton.innerText = '▼ Prov';
+        responseList.style.display = 'inline';
+    } else {
+        provButton.innerText = '▶ Prov';
+        responseList.style.display = 'none';
+    }
+}
+
+provButton.onclick = toggleProvDisplay;
 
 // Let the extension know that we are ready to handle messages.
 // This is necessary to avoid a race with the main page load.
