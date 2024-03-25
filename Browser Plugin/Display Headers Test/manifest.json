@@ -5,12 +5,12 @@
   "host_permissions": [
     "<all_urls>"
   ],
-  "action":{
+  "action": {
     "default_popup": "index.html",
     "default_title": "AJAX Detector"
   },
   "permissions": [
-    "unlimitedStorage", 
+    "unlimitedStorage",
     "storage",
     "scripting",
     "nativeMessaging",
@@ -18,10 +18,17 @@
     "activeTab",
     "tabs"
   ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
   "background": {
     "service_worker": "background.js"
   }
 }
-
-  
-
