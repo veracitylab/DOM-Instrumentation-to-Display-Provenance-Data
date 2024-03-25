@@ -1,7 +1,12 @@
 console.log("Content script running!");
 
 const responseList = document.createElement("div");
-responseList.innerHTML = "<ul></ul>";
+responseList.style.position = 'fixed';
+responseList.style.top = '10px';
+responseList.style.left = '10px';
+responseList.style.zIndex = '1000'; // Hopefully on top of everything
+responseList.style.backgroundColor = 'green';
+responseList.innerHTML = '<span style="color: red; background-color: yellow">▶ Prov</span><ul></ul>';
 document.getElementsByTagName("body")[0].appendChild(responseList);
 
 chrome.runtime.onMessage.addListener((msg) => {
