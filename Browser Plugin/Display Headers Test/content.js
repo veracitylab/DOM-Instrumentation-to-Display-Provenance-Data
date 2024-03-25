@@ -30,3 +30,9 @@ function addEntry(sourceUrl, provId) {
 function provenanceUrl(sourceUrl, provId) {
     return (sourceUrl + "/").replace(/\/.*/, `/prov/${provId}`);
 }
+
+// Let the extension know that we are ready to handle messages.
+// This is necessary to avoid a race with the main page load.
+console.log("Content script about to send ready message...");
+chrome.runtime.sendMessage({ type: "ready" });
+console.log("Content script has sent the ready message!");
