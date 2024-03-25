@@ -8,8 +8,6 @@ chrome.runtime.onMessage.addListener((msg) => {
     console.log("Received message: ", msg);
     if (msg.type === 'responseHeader') {
         handleResponseHeader(msg.details);
-    } else {
-        console.log("Ignoring provenance-free message");
     }
 });
 
@@ -18,11 +16,17 @@ function handleResponseHeader(responseHeader) {
     const provHeader = responseHeader.responseHeaders.find((h) => h.name === 'provenance-id');
     if (provHeader) {
         addEntry(responseHeader.url, provHeader.value);
+    } else {
+        console.log("Ignoring provenance-free message");
     }
 }
 
-function addEntry(url, provId) {
+function addEntry(sourceUrl, provId) {
     const item = document.createElement("li");
-    item.innerHTML = `<b>${provId}:</b> ${url}`
+    item.innerHTML = `<a href="${provenanceUrl(sourceUrl, provId)}"><b>${provId}:</b> ${sourceUrl}</a>`;
     responseList.children[0].appendChild(item);
+}
+
+function provenanceUrl(sourceUrl, provId) {
+    return (sourceUrl + "/").replace(/\/.*/, `/prov/${provId}`);
 }
