@@ -34,7 +34,9 @@
         "provenance-tab.html",
         "provenance-tab.js"
       ],
-      "extension_ids": []
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "background": {
