@@ -33,8 +33,10 @@ function handleResponseHeader(responseHeader) {
 }
 
 function addEntry(sourceUrl, provId) {
+    const provUrl = provenanceUrl(sourceUrl, provId);
     const item = document.createElement("li");
-    item.innerHTML = `<a href="${provenanceUrl(sourceUrl, provId)}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
+    item.innerHTML = `<a href="${provUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
+    item.children[0].onclick = (e) => openProvenanceDataTab(e, provUrl);
     responseList.appendChild(item);
 }
 
@@ -50,6 +52,12 @@ function toggleProvDisplay() {
         provButton.innerText = '▶ Prov';
         responseList.style.display = 'none';
     }
+}
+
+async function openProvenanceDataTab(e, provUrl) {
+    e.preventDefault();
+    const provData = await (await fetch(provUrl)).json();
+    console.log("Provenance data for ", provUrl, " is:", provData);
 }
 
 provButton.onclick = toggleProvDisplay;
