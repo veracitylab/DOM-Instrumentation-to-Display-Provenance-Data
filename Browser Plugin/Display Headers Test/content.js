@@ -34,9 +34,10 @@ function handleResponseHeader(responseHeader) {
 
 function addEntry(sourceUrl, provId) {
     const provUrl = provenanceUrl(sourceUrl, provId);
+    const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provUrl);
     const item = document.createElement("li");
-    item.innerHTML = `<a href="${provUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
-    item.children[0].onclick = (e) => openProvenanceDataTab(e, provUrl);
+    item.innerHTML = `<a href="${provenanceTabUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
+    // item.children[0].onclick = (e) => openProvenanceDataTab(e, provUrl);
     responseList.appendChild(item);
 }
 
