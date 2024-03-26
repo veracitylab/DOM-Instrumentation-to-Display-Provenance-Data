@@ -8,6 +8,13 @@ function responseUrls(details) {
   if (details.type != null && details.method != null && details.requestId != null){
     responseHeaders.push(JSON.stringify(details, null, 2));
     console.log("Seesaw HTTP request: " + JSON.stringify(details));		//DEBUG
+    if (details.type === 'main_frame') {
+      // A top-level frame load means we need to start queueing messages until the page indicates it's ready
+      const existingQueue = unreadyQueue.get(details.tabId) ?? []
+      console.log("Top-level frame load: Tab previously " + (readyTabs.has(details.tabId) ? "ready" : "not ready") + ". Will drop " + (unreadyQueue.get(details.tabId) ?? []).length + " queued messages.");
+      unreadyQueue.delete(details.tabId);
+      readyTabs.delete(details.tabId);
+    }
   }
   sendOrQueue(details.tabId, { type: "responseHeader", details });
 }
