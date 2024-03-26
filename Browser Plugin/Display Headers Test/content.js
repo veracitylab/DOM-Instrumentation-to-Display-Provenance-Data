@@ -18,23 +18,11 @@ document.getElementsByTagName("body")[0].appendChild(provenanceDiv);
 chrome.runtime.onMessage.addListener((msg) => {
     console.log("Received message: ", msg);
     if (msg.type === 'responseHeader') {
-        handleResponseHeader(msg.details);
+        addEntry(msg.details.url, msg.details.provId);
     }
 });
 
-function handleResponseHeader(responseHeader) {
-    console.log("handleResponseHeader() got: ", responseHeader);
-    const provHeader = responseHeader.responseHeaders.find((h) => h.name === 'provenance-id');
-    if (provHeader) {
-        addEntry(responseHeader.url, provHeader.value);
-    } else {
-        console.log("Ignoring provenance-free message");
-    }
-}
-
 function addEntry(sourceUrl, provId) {
-    // const provUrl = provenanceUrl(sourceUrl, provId);
-    // const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provUrl);
     const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provId + ";" + sourceUrl);
     const item = document.createElement("li");
     item.innerHTML = `<a href="${provenanceTabUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
