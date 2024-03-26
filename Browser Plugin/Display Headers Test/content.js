@@ -33,15 +33,12 @@ function handleResponseHeader(responseHeader) {
 }
 
 function addEntry(sourceUrl, provId) {
-    const provUrl = provenanceUrl(sourceUrl, provId);
-    const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provUrl);
+    // const provUrl = provenanceUrl(sourceUrl, provId);
+    // const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provUrl);
+    const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provId + ";" + sourceUrl);
     const item = document.createElement("li");
     item.innerHTML = `<a href="${provenanceTabUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
     responseList.appendChild(item);
-}
-
-function provenanceUrl(sourceUrl, provId) {
-    return new URL(`/prov/${provId}`, sourceUrl).toString();
 }
 
 function toggleProvDisplay() {
