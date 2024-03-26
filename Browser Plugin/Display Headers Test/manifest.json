@@ -28,6 +28,17 @@
       ]
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "provenance-tab.html",
+        "provenance-tab.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "background": {
     "service_worker": "background.js"
   }
