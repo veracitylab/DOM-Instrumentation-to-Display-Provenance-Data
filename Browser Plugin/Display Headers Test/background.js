@@ -5,15 +5,22 @@ let unreadyQueue = new Map();
 function responseUrls(details) {
   if (details.type != null && details.method != null && details.requestId != null){
     console.log("Saw HTTP request: " + JSON.stringify(details));		//DEBUG
-    if (details.type === 'main_frame') {
-      // A top-level frame load means we need to start queueing messages until the page indicates it's ready
-      const existingQueue = unreadyQueue.get(details.tabId) ?? []
-      console.log("Top-level frame load: Tab previously " + (readyTabs.has(details.tabId) ? "ready" : "not ready") + ". Will drop " + (unreadyQueue.get(details.tabId) ?? []).length + " queued messages.");
-      unreadyQueue.delete(details.tabId);
-      readyTabs.delete(details.tabId);
-    }
 
-    sendOrQueue(details.tabId, { type: "responseHeader", details });
+    const provIdInfo = details.responseHeaders.find((h) => h.name === 'provenance-id');
+    if (provIdInfo) {
+      if (details.type === 'main_frame') {
+        // A top-level frame load means we need to start queueing messages until the page indicates it's ready
+        const existingQueue = unreadyQueue.get(details.tabId) ?? []
+        console.log("Top-level frame load: Tab previously " + (readyTabs.has(details.tabId) ? "ready" : "not ready") + ". Will drop " + (unreadyQueue.get(details.tabId) ?? []).length + " queued messages.");
+        unreadyQueue.delete(details.tabId);
+        readyTabs.delete(details.tabId);
+      }
+  
+      // sendOrQueue(details.tabId, { type: "responseHeader", details });
+      sendOrQueue(details.tabId, { type: "responseHeader", details: { url: details.url, provId: provIdInfo.value } });
+    } else {
+      console.log("Ignoring provenance-free message");
+    }
   }
 }
 
