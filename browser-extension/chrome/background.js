@@ -7,21 +7,27 @@ let promiseChain = Promise.resolve();
 // let readyTabs = new Set();
 // let unreadyQueue = new Map();
 async function getReadyTabs() /*: Set<string> */ {
-  const fromStorage = await appendToPromiseChain(() => chrome.storage.session.get('readyTabs'));
+  console.log(`getReadyTabs() called`); //DEBUG
+  const fromStorage = await chrome.storage.session.get('readyTabs');
+  // console.log(`getReadyTabs() returning`); //DEBUG
   return new Set(fromStorage?.readyTabs ?? []);
 }
 
 async function setReadyTabs(readyTabs /*: Set<string> */) {
-  await appendToPromiseChain(() => chrome.storage.session.set({ readyTabs: [...readyTabs] })); // Store as array since chrome.storage can't handle Sets
+  console.log(`setReadyTabs() called`); //DEBUG
+  await chrome.storage.session.set({ readyTabs: [...readyTabs] }); // Store as array since chrome.storage can't handle Sets
 }
 
 async function getUnreadyQueue() /*: Map<number, string[]> */ {
-  const fromStorage = await appendToPromiseChain(() => chrome.storage.session.get('unreadyQueue'));
+  console.log(`getUnreadyQueue() called`); //DEBUG
+  const fromStorage = await chrome.storage.session.get('unreadyQueue');
   return new Map(fromStorage?.unreadyQueue ?? []);
 }
 
 async function setUnreadyQueue(unreadyQueue /*: Map<number, string[]> */) {
-  await appendToPromiseChain(() => chrome.storage.session.set({ unreadyQueue: [...unreadyQueue.entries()] })); // Store as array of pairs since chrome.storage can't handle Maps
+  console.log(`setUnreadyQueue() called`); //DEBUG
+  console.log(`setUnreadyQueue(): Will set the queue to `, [...unreadyQueue.entries()]);  //DEBUG
+  await chrome.storage.session.set({ unreadyQueue: [...unreadyQueue.entries()] }); // Store as array of pairs since chrome.storage can't handle Maps
 }
 
 async function responseUrls(details) {
@@ -41,11 +47,11 @@ async function responseUrls(details) {
           await setUnreadyQueue(unreadyQueue);
           readyTabs.delete(details.tabId);
           await setReadyTabs(readyTabs);
-        });
+        }, "toplevel->emptyQueue");
       }
   
       // sendOrQueue(details.tabId, { type: "responseHeader", details });
-      await appendToPromiseChain(() => sendOrQueue(details.tabId, { type: "responseHeader", details: { url: details.url, provId: provIdInfo.value } }));
+      await appendToPromiseChain(() => sendOrQueue(details.tabId, { type: "responseHeader", details: { url: details.url, provId: provIdInfo.value } }), "sendOrQueue");
     } else {
       console.log("Ignoring provenance-free message");
     }
@@ -66,7 +72,7 @@ chrome.runtime.onMessage.addListener(async (msg, sender) => {
       readyTabs.add(sender.tab.id);
       await setReadyTabs(readyTabs);
       await flushUnreadyQueue(sender.tab.id);
-    });
+    }, "ready->flush");
   }
 });
 
@@ -88,7 +94,7 @@ async function sendOrQueue(tabId, msg) {
 
 async function flushUnreadyQueue(tabId) {
   const unreadyQueue = await getUnreadyQueue();
-  console.log("Flushing " + unreadyQueue.get('' + tabId)?.length + " messages from unready queue for newly ready tab " + tabId);
+  console.log("Flushing " + unreadyQueue.get(tabId)?.length + " messages from unready queue for newly ready tab " + tabId);
   for (const msg of unreadyQueue.get(tabId) ?? []) {
     console.log("Sending message to newly ready tab " + tabId);
     send(tabId, msg);
@@ -102,7 +108,12 @@ function send(tabId, msg) {
   chrome.tabs.sendMessage(tabId, msg);
 }
 
-function appendToPromiseChain(func) {
-  promiseChain = promiseChain.then(func);
+function appendToPromiseChain(func, name) {
+  // promiseChain = promiseChain.then(func);
+  promiseChain = promiseChain.then(async () => {
+    console.log("Running in promise chain: " + name);
+    await func();
+    console.log("Finished running in promise chain: " + name);
+  });
   return promiseChain;
 }
