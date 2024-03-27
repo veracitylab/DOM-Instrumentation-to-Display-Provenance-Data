@@ -12,13 +12,13 @@ async function setReadyTabs(readyTabs /*: Set<string> */) {
   await chrome.storage.session.set({ readyTabs: [...readyTabs] }); // Store as array since chrome.storage can't handle Sets
 }
 
-async function getUnreadyQueue() /*: Map<string, string[]> */ {
+async function getUnreadyQueue() /*: Map<number, string[]> */ {
   const fromStorage = await chrome.storage.session.get('unreadyQueue');
-  return new Map(fromStorage?.unreadyQueue ? Object.entries(fromStorage?.unreadyQueue) : []);
+  return new Map(fromStorage?.unreadyQueue ?? []);
 }
 
-async function setUnreadyQueue(unreadyQueue /*: Map<string, string[]> */) {
-  await chrome.storage.session.set({ unreadyQueue: Object.fromEntries(unreadyQueue) }); // Store as array of pairs since chrome.storage can't handle Maps
+async function setUnreadyQueue(unreadyQueue /*: Map<number, string[]> */) {
+  await chrome.storage.session.set({ unreadyQueue: [...unreadyQueue.entries()] }); // Store as array of pairs since chrome.storage can't handle Maps
 }
 
 async function responseUrls(details) {
