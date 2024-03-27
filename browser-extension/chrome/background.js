@@ -111,9 +111,62 @@ function send(tabId, msg) {
 function appendToPromiseChain(func, name) {
   // promiseChain = promiseChain.then(func);
   promiseChain = promiseChain.then(async () => {
-    console.log("Running in promise chain: " + name);
+    // console.log("Running in promise chain: " + name);
     await func();
-    console.log("Finished running in promise chain: " + name);
+    // console.log("Finished running in promise chain: " + name);
   });
   return promiseChain;
 }
+
+//DEBUG: Everything below here is to stress-test the promiseChain -- to make sure that resolved promises don't leak memory
+var DEBUGstressTestPromiseChainEnabled = true;
+var DEBUGstressTestPromiseChainAppendToChainEnabled = true;
+var DEBUGstressTestPromiseChainLoggingRate = false;
+var DEBUGstressTestPromiseChainPauseMs = 1;
+
+async function DEBUGstressTestPromiseChain(name) {
+  let i = 0;
+  const nPromisesPerIter = 10;
+  console.log(`DEBUGstressTestPromiseChain(${name}) starting with ${nPromisesPerIter} promises per iteration`);
+
+  const work = async () => {
+    for (let j = i; j < i + nPromisesPerIter; ++j) {
+      const func = () => {
+        if (DEBUGstressTestPromiseChainLoggingRate && j % DEBUGstressTestPromiseChainLoggingRate === 0) {
+          console.log(`Stress test '${name} iteration ${j}`);
+        }
+
+        // ++i;
+      };
+
+      if (DEBUGstressTestPromiseChainAppendToChainEnabled) {
+        appendToPromiseChain(func, `Stress test '${name} iteration ${j}`);
+      }
+    }
+
+    await promiseChain;
+    
+    i += nPromisesPerIter;
+  };
+
+  if (DEBUGstressTestPromiseChainPauseMs >= 0) {
+    let intervalFunc = setInterval(async () => {
+      if (!DEBUGstressTestPromiseChainEnabled) {
+        console.log(`Cancelling setInterval() for test '${name}'`);
+        clearInterval(intervalFunc);
+      }
+  
+      await work();
+    }, DEBUGstressTestPromiseChainPauseMs);
+  } else {
+    // Negative value means no pauses at all
+    while (DEBUGstressTestPromiseChainEnabled) {
+      await work();
+    }
+
+    console.log(`DEBUGstressTestPromiseChain(${name}) finishing`);
+  }
+}
+
+DEBUGstressTestPromiseChain('one');
+DEBUGstressTestPromiseChain('two');
