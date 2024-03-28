@@ -1,32 +1,26 @@
 console.log("Background process started!");
 
-// Used to sequence loads and stores to avoid races
+// enqueueCriticalSection() uses this to sequence loads and stores to avoid races
 let promiseChain = Promise.resolve();
 
-// Don't send messages to tabs before they are ready; queue them up instead
-// let readyTabs = new Set();
-// let unreadyQueue = new Map();
+// Don't send messages to tabs before they are ready; queue them up instead.
+// Can't just store readyTabs and unreadyQueue in global vars, since those disappear after 30s
+// of inactivity: https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle#idle-shutdown
 async function getReadyTabs() /*: Set<string> */ {
-  console.log(`getReadyTabs() called`); //DEBUG
   const fromStorage = await chrome.storage.session.get('readyTabs');
-  // console.log(`getReadyTabs() returning`); //DEBUG
   return new Set(fromStorage?.readyTabs ?? []);
 }
 
 async function setReadyTabs(readyTabs /*: Set<string> */) {
-  console.log(`setReadyTabs() called`); //DEBUG
   await chrome.storage.session.set({ readyTabs: [...readyTabs] }); // Store as array since chrome.storage can't handle Sets
 }
 
 async function getUnreadyQueue() /*: Map<number, string[]> */ {
-  console.log(`getUnreadyQueue() called`); //DEBUG
   const fromStorage = await chrome.storage.session.get('unreadyQueue');
   return new Map(fromStorage?.unreadyQueue ?? []);
 }
 
 async function setUnreadyQueue(unreadyQueue /*: Map<number, string[]> */) {
-  console.log(`setUnreadyQueue() called`); //DEBUG
-  console.log(`setUnreadyQueue(): Will set the queue to `, [...unreadyQueue.entries()]);  //DEBUG
   await chrome.storage.session.set({ unreadyQueue: [...unreadyQueue.entries()] }); // Store as array of pairs since chrome.storage can't handle Maps
 }
 
@@ -38,7 +32,7 @@ async function responseUrls(details) {
     if (provIdInfo) {
       if (details.type === 'main_frame') {
         // A top-level frame load means we need to start queueing messages until the page indicates it's ready
-        await appendToPromiseChain(async () => {
+        await enqueueCriticalSection(async () => {
           const unreadyQueue = await getUnreadyQueue();
           const readyTabs = await getReadyTabs();
           const existingQueue = unreadyQueue.get(details.tabId) ?? []
@@ -47,11 +41,10 @@ async function responseUrls(details) {
           await setUnreadyQueue(unreadyQueue);
           readyTabs.delete(details.tabId);
           await setReadyTabs(readyTabs);
-        }, "toplevel->emptyQueue");
+        });
       }
   
-      // sendOrQueue(details.tabId, { type: "responseHeader", details });
-      await appendToPromiseChain(() => sendOrQueue(details.tabId, { type: "responseHeader", details: { url: details.url, provId: provIdInfo.value } }), "sendOrQueue");
+      await enqueueCriticalSection(() => sendOrQueue(details.tabId, { type: "responseHeader", details: { url: details.url, provId: provIdInfo.value } }));
     } else {
       console.log("Ignoring provenance-free message");
     }
@@ -67,12 +60,12 @@ chrome.webRequest.onHeadersReceived.addListener(
 chrome.runtime.onMessage.addListener(async (msg, sender) => {
   console.log("Received message: ", msg, " from ", sender);
   if (msg.type === 'ready') {
-    await appendToPromiseChain(async () => {
+    await enqueueCriticalSection(async () => {
       const readyTabs = await getReadyTabs();
       readyTabs.add(sender.tab.id);
       await setReadyTabs(readyTabs);
       await flushUnreadyQueue(sender.tab.id);
-    }, "ready->flush");
+    });
   }
 });
 
@@ -108,12 +101,12 @@ function send(tabId, msg) {
   chrome.tabs.sendMessage(tabId, msg);
 }
 
-function appendToPromiseChain(func, name) {
-  // promiseChain = promiseChain.then(func);
-  promiseChain = promiseChain.then(async () => {
-    console.log("Running in promise chain: " + name);
-    await func();
-    console.log("Finished running in promise chain: " + name);
-  });
+// A way to make a "critical section" that can span async calls. Needed to avoid races with (async) chrome.storage loads and stores.
+// For any 2 calls to this function, the argument functions will be executed in non-overlapping fashion.
+// The promise chain conceptually grows forever, so if settled promises in a promise chain are not GCed, this is a memory leak. But:
+// (a) empirically they are GCed so long as the event loop iteration finishes between calls
+// (b) an implementation pf promises that does not GC them is arguably broken by design
+function enqueueCriticalSection(funcReturningPromise) {
+  promiseChain = promiseChain.then(funcReturningPromise);
   return promiseChain;
 }
