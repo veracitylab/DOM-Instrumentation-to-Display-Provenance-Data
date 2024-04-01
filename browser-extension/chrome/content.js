@@ -56,4 +56,4 @@ console.log("Content script has sent the ready message!");
 }
 
 // Since we are now being injected ASAP, need to wait until the document finishes loading before we actually run the main code.
-window.addEventListener('load', main);
+window.addEventListener('DOMContentLoaded', main);
