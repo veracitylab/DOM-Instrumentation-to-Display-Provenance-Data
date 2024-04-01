@@ -1,5 +1,10 @@
 console.log("Content script running!");
 
+//TODO: fix indenting!
+function main() {
+
+console.log("Content script's main() is now running (hopefully after page loading completed)!");
+
 const provenanceDiv = document.createElement("div");
 provenanceDiv.style.position = 'fixed';
 provenanceDiv.style.top = '10px';
@@ -46,3 +51,9 @@ provButton.onclick = toggleProvDisplay;
 console.log("Content script about to send ready message...");
 chrome.runtime.sendMessage({ type: "ready" });
 console.log("Content script has sent the ready message!");
+
+
+}
+
+// Since we are now being injected ASAP, need to wait until the document finishes loading before we actually run the main code.
+window.addEventListener('load', main);
