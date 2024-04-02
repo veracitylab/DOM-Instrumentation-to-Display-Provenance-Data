@@ -1,5 +1,10 @@
 console.log("Content script running!");
 
+const initialScript = document.createElement("script");
+initialScript.textContent = "console.log('This is running from inside the script injected directly into the page!');";
+//document.head.appendChild(initialScript);
+console.log("document object at content script start:", document);
+
 // Since we are now being injected ASAP, need to wait until the document finishes loading before we actually run the main code.
 function main() {
     console.log("Content script's main() is now running (hopefully after page loading completed)!");
