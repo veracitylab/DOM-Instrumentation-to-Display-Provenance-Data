@@ -72,18 +72,18 @@ window.XMLHttpRequest = class XMLHttpRequest {
         return value instanceof Function ? value.bind(instance._XMLHttpRequestInstance) : value
       },
       set(instance, property, value) {
-        if (property === 'onreadystatechange') {
-            console.log(`Intercepting assignment to onreadystatechange!`);
+        if ((property === 'onreadystatechange' || property === 'onload') && value) {
+            console.log(`Intercepting assignment to ${property}!`);
             const origFunc = value;
             value = function (...args) {
-                console.log("This is running just before the readystatechange handler!");
+                console.log(`This is running just before the ${property} handler!`);
                 DEBUGcount++;
                 // return 42;      //DEBUG
 
 
                 const result = origFunc(...args);
                 //TODO: Handle case where result is a Promise
-                console.log("This is running just after the readystatechange handler!");
+                console.log(`This is running just after the ${property} handler!`);
                 return result;
             }
 
