@@ -161,14 +161,22 @@ delete xhr.somedummyproperty;
 console.log("Deleted somedummyproperty from XHR for ${exampleUrl}");
 const hasItAfterDeleting = 'somedummyproperty' in xhr;
 console.log(`somedummyproperty in xhr for ${exampleUrl}: ${hasItAfterDeleting}`);
-xhr.onreadystatechange = function (e) {
+// xhr.onreadystatechange = function (e) {
+//     console.log("readystatechange happened: ", e.target.readyState);
+//     if (e.target.readyState === 4) {
+//         // console.log("Contents:", e.target.responseText);
+//         console.log("Contents:", xhr.responseText);
+//     }
+// };
+// console.log(`Assigned to onreadystatechange of XHR for ${exampleUrl}`);
+xhr.addEventListener('readystatechange', function (e) {
     console.log("readystatechange happened: ", e.target.readyState);
     if (e.target.readyState === 4) {
         // console.log("Contents:", e.target.responseText);
         console.log("Contents:", xhr.responseText);
     }
-};
-console.log(`Assigned to onreadystatechange of XHR for ${exampleUrl}`);
+});
+console.log(`Added readystatechange listener of XHR for ${exampleUrl}`);
 xhr.send();
 console.log(`Called send() on XHR for ${exampleUrl}`);
 
