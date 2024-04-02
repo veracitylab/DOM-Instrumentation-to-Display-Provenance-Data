@@ -65,6 +65,30 @@ window.XMLHttpRequest = class XMLHttpRequest {
 
           // Or return whatever you want
           return "whatever you wanted"
+        } else if (property === "addEventListener") {
+            console.log("Handler: addEventListener()!");
+            const origFunc = instance._XMLHttpRequestInstance[property];
+            const newFunc = function (...args) {
+                console.log(`This is running just before the ${property} handler!`);
+                DEBUGcount++;
+                // return 42;      //DEBUG
+
+                if (args[0] === 'readystatechange' || args[0] === 'load') {
+                    console.log(`This is running just before the ${property} addEventListener(${args[0]}) handler!`);
+                }
+
+                const result = origFunc(...args);
+
+                if (args[0] === 'readystatechange' || args[0] === 'load') {
+                    console.log(`This is running just after the ${property} addEventListener(${args[0]}) handler!`);
+                }
+
+                //TODO: Handle case where result is a Promise
+                console.log(`This is running just after the ${property} handler!`);
+                return result;
+            }
+
+            return newFunc
         }
 
         // Functions won't work without having `_XMLHttpRequestInstance` as `this`
