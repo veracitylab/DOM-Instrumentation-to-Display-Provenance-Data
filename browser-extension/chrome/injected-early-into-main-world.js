@@ -1,5 +1,7 @@
 console.log("This is running in the MAIN world, hopefully before all other scripts!");
 
+var DEBUGcount = 0;
+
 // // const ORIG_XMLHttpRequest = XMLHttpRequest;
 // window.ORIG_XMLHttpRequest = XMLHttpRequest;
 
@@ -75,6 +77,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
             const origFunc = value;
             value = function (...args) {
                 console.log("This is running just before the readystatechange handler!");
+                DEBUGcount++;
                 // return 42;      //DEBUG
 
 
@@ -173,8 +176,13 @@ console.log(`Called send() on XHR for ${exampleUrl}`);
 
 // console.log("Setting up the example URL to be loaded at DOMContentLoaded time");
 // document.addEventListener('DOMContentLoaded', later());
-console.log("Running the example URL XHR immediately...");
-later();
-console.log("Finished running the example URL XHR immediately.");
+
+// console.log("Running the example URL XHR immediately...");
+// later();
+// console.log("Finished running the example URL XHR immediately.");
+
+console.log("Running the example URL XHR in 5s...");
+setTimeout(later, 5000);
+console.log("Finished running the example URL XHR in 5s.");
 
 console.log("We have proxied XMLHttpRequest!");
