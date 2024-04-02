@@ -1,46 +1,84 @@
 console.log("This is running in the MAIN world, hopefully before all other scripts!");
 
-// const ORIG_XMLHttpRequest = XMLHttpRequest;
-window.ORIG_XMLHttpRequest = XMLHttpRequest;
+// // const ORIG_XMLHttpRequest = XMLHttpRequest;
+// window.ORIG_XMLHttpRequest = XMLHttpRequest;
 
-// Proxy XMLHttpRequest, to intercept assignments to onreadystatechange:
-const xhrObjectHandler = {
-    // set(target, prop, value) {
-    //     console.log(`xhrObjectHandler: .${prop} being set to ${value} on target ${target}!`);
-    //     return target[prop] = value;
-    // }
-    // get(target, prop, receiver) {
-    //     // By default, it looks like Reflect.get(target, prop, receiver)
-    //     // which has a different value of `this`
-    //     return target[prop];
-    // },
-    get(target, prop, receiver) {
-        console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, '!');
-        const value = target[prop];
-        if (value instanceof Function) {
-            console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, ': About to handle function as special case');
-            return function (...args) {
-                return value.apply(this === receiver ? target : this, args);
-            };
+// // Proxy XMLHttpRequest, to intercept assignments to onreadystatechange:
+// const xhrObjectHandler = {
+//     // set(target, prop, value) {
+//     //     console.log(`xhrObjectHandler: .${prop} being set to ${value} on target ${target}!`);
+//     //     return target[prop] = value;
+//     // }
+//     // get(target, prop, receiver) {
+//     //     // By default, it looks like Reflect.get(target, prop, receiver)
+//     //     // which has a different value of `this`
+//     //     return target[prop];
+//     // },
+//     get(target, prop, receiver) {
+//         console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, '!');
+//         const value = target[prop];
+//         if (value instanceof Function) {
+//             console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, ': About to handle function as special case');
+//             return function (...args) {
+//                 return value.apply(this === receiver ? target : this, args);
+//             };
+//         }
+//         console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, ': About to return ordinary value ', value);
+//         return value;
+//     },
+// };
+
+// const xhrClassHandler = {
+//     construct(target, args) {
+//         console.log(`xhrClassHandler: Constructing new XHR object with args`, args, `for target ${target}!`);
+//         // return new target(...args);
+//         // return new Proxy(new target(...args), xhrObjectHandler);
+//         return new Proxy(new ORIG_XMLHttpRequest(...args), xhrObjectHandler);
+//     }
+// };
+
+// xhrProxy = new Proxy(XMLHttpRequest, xhrClassHandler);
+// window.XMLHttpRequest = xhrProxy;      // Sparks fly!
+
+// Below proxying of XMLHttpRequest taken from https://stackoverflow.com/a/77456512/47984
+"use strict"
+
+window.XMLHttpRequest = class XMLHttpRequest {
+  static _originalXMLHttpRequest = window.XMLHttpRequest
+
+  constructor(...args) {
+    this._XMLHttpRequestInstance = new XMLHttpRequest._originalXMLHttpRequest(...args)
+
+    // If a return statement is used in a constructor with an object,
+    // the object will be returned instead of `this`.
+    // https://javascript.info/constructor-new#return-from-constructors
+    return new Proxy(this, {
+      get(instance, property) {
+        if (property === "responseText") {
+            console.log("Handler: get(responseTest)!");
+          // Modify the response string
+          // `this` doesn't work inside an object, use `instance` instead
+        //   return instance._XMLHttpRequestInstance.responseText.replace("Barbarian", "IT WORKED!")
+        return instance._XMLHttpRequestInstance.responseText.replace('"title":"', '"title":"IT WORKED!')
+
+          // Or return whatever you want
+          return "whatever you wanted"
         }
-        console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, ': About to return ordinary value ', value);
-        return value;
-    },
-};
 
-const xhrClassHandler = {
-    construct(target, args) {
-        console.log(`xhrClassHandler: Constructing new XHR object with args`, args, `for target ${target}!`);
-        // return new target(...args);
-        // return new Proxy(new target(...args), xhrObjectHandler);
-        return new Proxy(new ORIG_XMLHttpRequest(...args), xhrObjectHandler);
-    }
-};
+        // Functions won't work without having `_XMLHttpRequestInstance` as `this`
+        const value = instance._XMLHttpRequestInstance[property]
+        return value instanceof Function ? value.bind(instance._XMLHttpRequestInstance) : value
+      },
+      set(instance, property, value) {
+        // `this` doesn't work inside an object, use `instance` instead
+        instance._XMLHttpRequestInstance[property] = value
+        return true
+      }
+    })
+  }
+}
 
-xhrProxy = new Proxy(XMLHttpRequest, xhrClassHandler);
-window.XMLHttpRequest = xhrProxy;      // Sparks fly!
-
-// Quick test
+// Quick test (for some reason the XMLHttpRequest calls below aren't intercepted, so this gives a false negative; later calls are correctly intercepted)
 const exampleUrl = 'http://localhost:8080/api/v1/movie/66';
 console.log(`About to construct XHR for ${exampleUrl}`);
 const xhr = new XMLHttpRequest();
