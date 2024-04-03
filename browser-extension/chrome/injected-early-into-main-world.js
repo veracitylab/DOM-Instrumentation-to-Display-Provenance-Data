@@ -47,6 +47,31 @@ let observer;   // Populated by setupMutationObserver()
 // Below proxying of XMLHttpRequest taken from https://stackoverflow.com/a/77456512/47984
 "use strict"
 
+
+function makeWrappedListener(oldListener, desc) {
+    const newListener = function (...args) {
+        console.log(`This is running just before the supplied ${desc} handler!`);
+        DEBUGcount++;
+        DEBUGinsideXhrResponse++;
+        const listenerResult = oldListener(...args);
+        console.log(`This is running just after the supplied ${desc} handler!`);
+        // DEBUGinsideXhrResponse--;
+        // setTimeout(() => {
+        // queueMicrotask(() => {
+        //     console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
+        //     DEBUGinsideXhrResponse--;
+        // });
+        console.log(`Eagerly unsetting flag and gathering mutations with takeRecords()!`);
+        const mutations = observer.takeRecords();
+        mutationObserverCallback(mutations);
+        DEBUGinsideXhrResponse--;
+        console.log(`End of eager mutation processing with takeRecords()!`);
+        return listenerResult;
+    };
+
+    return newListener;
+}
+
 window.XMLHttpRequest = class XMLHttpRequest {
   static _originalXMLHttpRequest = window.XMLHttpRequest
 
@@ -78,26 +103,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
                 if (type === 'readystatechange' || type === 'load') {
                     console.log(`Wrapping the supplied listener for addEventListener(${type})!`);
                     const oldListener = listener;
-                    const newListener = function (...args) {
-                        console.log(`This is running just before the supplied addEventListener(${type}) handler!`);
-                        DEBUGcount++;
-                        DEBUGinsideXhrResponse++;
-                        const listenerResult = oldListener(...args);
-                        console.log(`This is running just after the supplied addEventListener(${type}) handler!`);
-                        // DEBUGinsideXhrResponse--;
-                        // setTimeout(() => {
-                        // queueMicrotask(() => {
-                        //     console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
-                        //     DEBUGinsideXhrResponse--;
-                        // });
-                        console.log(`Eagerly unsetting flag and gathering mutations with takeRecords()!`);
-                        const mutations = observer.takeRecords();
-                        mutationObserverCallback(mutations);
-                        DEBUGinsideXhrResponse--;
-                        console.log(`End of eager mutation processing with takeRecords()!`);
-                        return listenerResult;
-                    };
-
+                    const newListener = makeWrappedListener(oldListener, type);
                     listener = newListener;
                 }
 
@@ -124,29 +130,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
         if ((property === 'onreadystatechange' || property === 'onload') && value) {
             console.log(`Intercepting assignment to ${property}!`);
             const origFunc = value;
-            value = function (...args) {
-                console.log(`This is running just before the ${property} handler!`);
-                DEBUGcount++;
-                DEBUGinsideXhrResponse++;
-                // return 42;      //DEBUG
-
-
-                const result = origFunc(...args);
-                //TODO: Handle case where result is a Promise
-                console.log(`This is running just after the ${property} handler!`);
-                // DEBUGinsideXhrResponse--;
-                // setTimeout(() => {
-                // queueMicrotask(() => {
-                //     console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
-                //     DEBUGinsideXhrResponse--;
-                // });
-                console.log(`Eagerly unsetting flag and gathering mutations with takeRecords()!`);
-                const mutations = observer.takeRecords();
-                mutationObserverCallback(mutations);
-                DEBUGinsideXhrResponse--;
-                console.log(`End of eager mutation processing with takeRecords()!`);
-                return result;
-            }
+            value = makeWrappedListener(origFunc, property);
 
             // console.log("About to test-run the new handler:");
             // value(3, 4, 5);
