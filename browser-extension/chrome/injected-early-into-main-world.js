@@ -2,6 +2,7 @@ console.log("This is running in the MAIN world, hopefully before all other scrip
 
 var DEBUGcount = 0;
 var DEBUGinsideXhrResponse = 0;
+let observer;   // Populated by setupMutationObserver()
 
 // // const ORIG_XMLHttpRequest = XMLHttpRequest;
 // window.ORIG_XMLHttpRequest = XMLHttpRequest;
@@ -84,10 +85,15 @@ window.XMLHttpRequest = class XMLHttpRequest {
                         console.log(`This is running just after the supplied addEventListener(${type}) handler!`);
                         // DEBUGinsideXhrResponse--;
                         // setTimeout(() => {
-                        queueMicrotask(() => {
-                            console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
-                            DEBUGinsideXhrResponse--;
-                        });
+                        // queueMicrotask(() => {
+                        //     console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
+                        //     DEBUGinsideXhrResponse--;
+                        // });
+                        console.log(`Eagerly unsetting flag and gathering mutations with takeRecords()!`);
+                        const mutations = observer.takeRecords();
+                        mutationObserverCallback(mutations);
+                        DEBUGinsideXhrResponse--;
+                        console.log(`End of eager mutation processing with takeRecords()!`);
                         return listenerResult;
                     };
 
@@ -129,10 +135,15 @@ window.XMLHttpRequest = class XMLHttpRequest {
                 console.log(`This is running just after the ${property} handler!`);
                 // DEBUGinsideXhrResponse--;
                 // setTimeout(() => {
-                queueMicrotask(() => {
-                    console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
-                    DEBUGinsideXhrResponse--;
-                });
+                // queueMicrotask(() => {
+                //     console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
+                //     DEBUGinsideXhrResponse--;
+                // });
+                console.log(`Eagerly unsetting flag and gathering mutations with takeRecords()!`);
+                const mutations = observer.takeRecords();
+                mutationObserverCallback(mutations);
+                DEBUGinsideXhrResponse--;
+                console.log(`End of eager mutation processing with takeRecords()!`);
                 return result;
             }
 
@@ -215,7 +226,7 @@ function setupMutationObserver() {
     const config = { attributes: true, childList: true, subtree: true };
 
     // Create an observer instance linked to the callback function
-    const observer = new MutationObserver(mutationObserverCallback);
+    observer = new MutationObserver(mutationObserverCallback);
 
     // Start observing the target node for configured mutations
     observer.observe(targetNode, config);
