@@ -1,51 +1,31 @@
+"use strict";
+
 console.log("This is running in the MAIN world, hopefully before all other scripts!");
 
 var DEBUGcount = 0;
 var DEBUGinsideXhrResponse = 0;
-let observer;   // Populated by setupMutationObserver()
 
-// // const ORIG_XMLHttpRequest = XMLHttpRequest;
-// window.ORIG_XMLHttpRequest = XMLHttpRequest;
+console.log("About to set up the MutationObserver...");
+const observer = createMutationObserver();
+console.log("Finished setting up the MutationObserver.");
 
-// // Proxy XMLHttpRequest, to intercept assignments to onreadystatechange:
-// const xhrObjectHandler = {
-//     // set(target, prop, value) {
-//     //     console.log(`xhrObjectHandler: .${prop} being set to ${value} on target ${target}!`);
-//     //     return target[prop] = value;
-//     // }
-//     // get(target, prop, receiver) {
-//     //     // By default, it looks like Reflect.get(target, prop, receiver)
-//     //     // which has a different value of `this`
-//     //     return target[prop];
-//     // },
-//     get(target, prop, receiver) {
-//         console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, '!');
-//         const value = target[prop];
-//         if (value instanceof Function) {
-//             console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, ': About to handle function as special case');
-//             return function (...args) {
-//                 return value.apply(this === receiver ? target : this, args);
-//             };
-//         }
-//         console.log(`xhrObjectHandler: get(prop=${prop}) called on target`, target, ': About to return ordinary value ', value);
-//         return value;
-//     },
-// };
+function createMutationObserver() {
+    // Select the node that will be observed for mutations
+    const targetNode = document.documentElement;
 
-// const xhrClassHandler = {
-//     construct(target, args) {
-//         console.log(`xhrClassHandler: Constructing new XHR object with args`, args, `for target ${target}!`);
-//         // return new target(...args);
-//         // return new Proxy(new target(...args), xhrObjectHandler);
-//         return new Proxy(new ORIG_XMLHttpRequest(...args), xhrObjectHandler);
-//     }
-// };
+    // Options for the observer (which mutations to observe)
+    const config = { attributes: true, childList: true, subtree: true };
 
-// xhrProxy = new Proxy(XMLHttpRequest, xhrClassHandler);
-// window.XMLHttpRequest = xhrProxy;      // Sparks fly!
+    // Create an observer instance linked to the callback function
+    const mutationObserver = new MutationObserver(mutationObserverCallback);
 
-// Below proxying of XMLHttpRequest taken from https://stackoverflow.com/a/77456512/47984
-"use strict"
+    // Start observing the target node for configured mutations
+    mutationObserver.observe(targetNode, config);
+
+    // // Later, you can stop observing
+    // observer.disconnect();
+    return mutationObserver;
+}
 
 function makeWrappedListener(oldListener, desc) {
     return function (...args) {
@@ -69,6 +49,8 @@ function makeWrappedListener(oldListener, desc) {
         return listenerResult;
     };
 }
+
+// Below proxying of XMLHttpRequest taken from https://stackoverflow.com/a/77456512/47984
 
 window.XMLHttpRequest = class XMLHttpRequest {
   static _originalXMLHttpRequest = window.XMLHttpRequest
@@ -185,27 +167,6 @@ function mutationObserverCallback(mutationList /*, observer*/) {
         }
     }
 };
-
-function setupMutationObserver() {
-    // Select the node that will be observed for mutations
-    const targetNode = document.documentElement;
-
-    // Options for the observer (which mutations to observe)
-    const config = { attributes: true, childList: true, subtree: true };
-
-    // Create an observer instance linked to the callback function
-    observer = new MutationObserver(mutationObserverCallback);
-
-    // Start observing the target node for configured mutations
-    observer.observe(targetNode, config);
-
-    // // Later, you can stop observing
-    // observer.disconnect();
-}
-
-console.log("About to set up the MutationObserver...");
-setupMutationObserver();
-console.log("Finished setting up the MutationObserver.");
 
 
 
