@@ -58,7 +58,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
     return new Proxy(this, {
       get(instance, property) {
         if (property === "responseText") {
-            console.trace("Handler: get(responseText)!");
+            console.log("Handler: get(responseText)!");
           // Modify the response string
           // `this` doesn't work inside an object, use `instance` instead
         //   return instance._XMLHttpRequestInstance.responseText.replace("Barbarian", "IT WORKED!")
