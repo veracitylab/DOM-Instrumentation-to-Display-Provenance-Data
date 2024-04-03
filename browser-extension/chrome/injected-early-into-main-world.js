@@ -1,6 +1,7 @@
 console.log("This is running in the MAIN world, hopefully before all other scripts!");
 
 var DEBUGcount = 0;
+var DEBUGinsideXhrResponse = 0;
 
 // // const ORIG_XMLHttpRequest = XMLHttpRequest;
 // window.ORIG_XMLHttpRequest = XMLHttpRequest;
@@ -78,8 +79,10 @@ window.XMLHttpRequest = class XMLHttpRequest {
                     const oldListener = listener;
                     const newListener = function (...args) {
                         console.log(`This is running just before the supplied addEventListener(${type}) handler!`);
+                        DEBUGinsideXhrResponse++;
                         const listenerResult = oldListener(...args);
                         console.log(`This is running just after the supplied addEventListener(${type}) handler!`);
+                        DEBUGinsideXhrResponse--;
                         return listenerResult;
                     };
 
@@ -112,12 +115,14 @@ window.XMLHttpRequest = class XMLHttpRequest {
             value = function (...args) {
                 console.log(`This is running just before the ${property} handler!`);
                 DEBUGcount++;
+                DEBUGinsideXhrResponse++;
                 // return 42;      //DEBUG
 
 
                 const result = origFunc(...args);
                 //TODO: Handle case where result is a Promise
                 console.log(`This is running just after the ${property} handler!`);
+                DEBUGinsideXhrResponse--;
                 return result;
             }
 
@@ -175,6 +180,46 @@ window.XMLHttpRequest = class XMLHttpRequest {
     })
   }
 }
+
+
+
+
+
+function setupMutationObserver() {
+    // Select the node that will be observed for mutations
+    const targetNode = document.documentElement;
+
+    // Options for the observer (which mutations to observe)
+    const config = { attributes: true, childList: true, subtree: true };
+
+    // Callback function to execute when mutations are observed
+    const callback = (mutationList, observer) => {
+        console.log(`MutationObserver callback called, DEBUGinsideXhrResponse=${DEBUGinsideXhrResponse}, DEBUGcount=${DEBUGcount}!`);
+        for (const mutation of mutationList) {
+            if (mutation.type === "childList") {
+                console.log("A child node has been added or removed.");
+            } else if (mutation.type === "attributes") {
+                console.log(`The ${mutation.attributeName} attribute was modified.`);
+            }
+        }
+    };
+
+    // Create an observer instance linked to the callback function
+    const observer = new MutationObserver(callback);
+
+    // Start observing the target node for configured mutations
+    observer.observe(targetNode, config);
+
+    // // Later, you can stop observing
+    // observer.disconnect();
+}
+
+console.log("About to set up the MutationObserver...");
+setupMutationObserver();
+console.log("Finished setting up the MutationObserver.");
+
+
+
 
 // Try running it a bit later
 function later() {
