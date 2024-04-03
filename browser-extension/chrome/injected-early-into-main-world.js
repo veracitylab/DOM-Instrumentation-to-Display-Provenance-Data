@@ -82,7 +82,11 @@ window.XMLHttpRequest = class XMLHttpRequest {
                         DEBUGinsideXhrResponse++;
                         const listenerResult = oldListener(...args);
                         console.log(`This is running just after the supplied addEventListener(${type}) handler!`);
-                        DEBUGinsideXhrResponse--;
+                        // DEBUGinsideXhrResponse--;
+                        setTimeout(() => {
+                            console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
+                            DEBUGinsideXhrResponse--;
+                        });
                         return listenerResult;
                     };
 
@@ -122,7 +126,11 @@ window.XMLHttpRequest = class XMLHttpRequest {
                 const result = origFunc(...args);
                 //TODO: Handle case where result is a Promise
                 console.log(`This is running just after the ${property} handler!`);
-                DEBUGinsideXhrResponse--;
+                // DEBUGinsideXhrResponse--;
+                setTimeout(() => {
+                    console.log(`Unsetting flag, hopefully AFTER the MutationObserver events were processed...`);
+                    DEBUGinsideXhrResponse--;
+                });
                 return result;
             }
 
