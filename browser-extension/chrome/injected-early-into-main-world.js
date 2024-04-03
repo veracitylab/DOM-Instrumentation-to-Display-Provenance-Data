@@ -47,13 +47,13 @@ let observer;   // Populated by setupMutationObserver()
 // Below proxying of XMLHttpRequest taken from https://stackoverflow.com/a/77456512/47984
 "use strict"
 
-
 function makeWrappedListener(oldListener, desc) {
-    const newListener = function (...args) {
+    return function (...args) {
         console.log(`This is running just before the supplied ${desc} handler!`);
         DEBUGcount++;
         DEBUGinsideXhrResponse++;
         const listenerResult = oldListener(...args);
+        //TODO: Maybe handle a Promise return value specially?
         console.log(`This is running just after the supplied ${desc} handler!`);
         // DEBUGinsideXhrResponse--;
         // setTimeout(() => {
@@ -68,8 +68,6 @@ function makeWrappedListener(oldListener, desc) {
         console.log(`End of eager mutation processing with takeRecords()!`);
         return listenerResult;
     };
-
-    return newListener;
 }
 
 window.XMLHttpRequest = class XMLHttpRequest {
@@ -102,9 +100,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
 
                 if (type === 'readystatechange' || type === 'load') {
                     console.log(`Wrapping the supplied listener for addEventListener(${type})!`);
-                    const oldListener = listener;
-                    const newListener = makeWrappedListener(oldListener, type);
-                    listener = newListener;
+                    listener = makeWrappedListener(listener, type);
                 }
 
                 const result = origAddEventListener(type, listener, optionsOrUseCapture);
@@ -113,13 +109,11 @@ window.XMLHttpRequest = class XMLHttpRequest {
                     console.log(`Just added a ${type} listener that will run extra stuff before and after the caller's listener!`);
                 }
 
-                //TODO: Handle case where result is a Promise
                 console.log(`About to finish the modified addEventListener() for ${type}!`);
                 return result;  // Should be undefined
             };
 
             return newAddEventListener;
-            // return newAddEventListener.bind(instance._XMLHttpRequestInstance);
         }
 
         // Functions won't work without having `_XMLHttpRequestInstance` as `this`
@@ -129,20 +123,9 @@ window.XMLHttpRequest = class XMLHttpRequest {
       set(instance, property, value) {
         if ((property === 'onreadystatechange' || property === 'onload') && value) {
             console.log(`Intercepting assignment to ${property}!`);
-            const origFunc = value;
-            value = makeWrappedListener(origFunc, property);
-
-            // console.log("About to test-run the new handler:");
-            // value(3, 4, 5);
-            // console.log("Test run finished.");
-
-            // console.log("Setting it the hard way...");
-            // // instance.onreadystatechange = value;
-            // instance._XMLHttpRequestInstance.onreadystatechange = value;
-            // console.log("Setting it the hard way done.");
-            // return true
-            // // return false
+            value = makeWrappedListener(value, property);
         }
+
         // `this` doesn't work inside an object, use `instance` instead
         instance._XMLHttpRequestInstance[property] = value
         return true
