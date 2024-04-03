@@ -80,6 +80,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
                     const oldListener = listener;
                     const newListener = function (...args) {
                         console.log(`This is running just before the supplied addEventListener(${type}) handler!`);
+                        DEBUGcount++;
                         DEBUGinsideXhrResponse++;
                         const listenerResult = oldListener(...args);
                         console.log(`This is running just after the supplied addEventListener(${type}) handler!`);
