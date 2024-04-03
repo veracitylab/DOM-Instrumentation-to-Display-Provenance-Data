@@ -28,12 +28,17 @@ function createMutationObserver() {
 }
 
 function makeWrappedListener(oldListener, desc) {
-    return function (...args) {
+    return function (e) {
         console.log(`This is running just before the supplied ${desc} handler!`);
         DEBUGcount++;
         DEBUGinsideXhrResponse++;
         const observer = createMutationObserver();
-        const listenerResult = oldListener(...args);
+
+        // The browser will supply the actual XMLHttpRequest object in .target and .currentTarget instead of our Proxy of it,
+        // which could break the listener if it compares either one to the XMLHttpRequest object it originally created:
+        // https://github.com/veracitylab/DOM-Instrumentation-to-Display-Provenance-Data/issues/16
+
+        const listenerResult = oldListener(e);
         //TODO: Maybe handle a Promise return value specially?
         console.log(`This is running just after the supplied ${desc} handler!`);
         // DEBUGinsideXhrResponse--;
