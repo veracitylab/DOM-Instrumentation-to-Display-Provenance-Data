@@ -67,28 +67,38 @@ window.XMLHttpRequest = class XMLHttpRequest {
           return "whatever you wanted"
         } else if (property === "addEventListener") {
             console.log("Handler: addEventListener()!");
-            const origFunc = instance._XMLHttpRequestInstance[property];
-            const newFunc = function (...args) {
-                console.log(`This is running just before the ${property} handler!`);
+            const origAddEventListener = instance._XMLHttpRequestInstance[property].bind(instance._XMLHttpRequestInstance);
+            const newAddEventListener = function (type, listener, optionsOrUseCapture) {
+                console.log(`Inside the modified addEventListener() for ${type}!`);
                 DEBUGcount++;
                 // return 42;      //DEBUG
 
-                if (args[0] === 'readystatechange' || args[0] === 'load') {
-                    console.log(`This is running just before the ${property} addEventListener(${args[0]}) handler!`);
+                if (type === 'readystatechange' || type === 'load') {
+                    console.log(`Wrapping the supplied listener for addEventListener(${type})!`);
+                    const oldListener = listener;
+                    const newListener = function (...args) {
+                        console.log(`This is running just before the supplied addEventListener(${type}) handler!`);
+                        const listenerResult = oldListener(...args);
+                        console.log(`This is running just after the supplied addEventListener(${type}) handler!`);
+                        return listenerResult;
+                    };
+
+                    listener = newListener;
                 }
 
-                const result = origFunc(...args);
+                const result = origAddEventListener(type, listener, optionsOrUseCapture);
 
-                if (args[0] === 'readystatechange' || args[0] === 'load') {
-                    console.log(`This is running just after the ${property} addEventListener(${args[0]}) handler!`);
+                if (type === 'readystatechange' || type === 'load') {
+                    console.log(`Just added a ${type} listener that will run extra stuff before and after the caller's listener!`);
                 }
 
                 //TODO: Handle case where result is a Promise
-                console.log(`This is running just after the ${property} handler!`);
-                return result;
-            }
+                console.log(`About to finish the modified addEventListener() for ${type}!`);
+                return result;  // Should be undefined
+            };
 
-            return newFunc
+            return newAddEventListener;
+            // return newAddEventListener.bind(instance._XMLHttpRequestInstance);
         }
 
         // Functions won't work without having `_XMLHttpRequestInstance` as `this`
