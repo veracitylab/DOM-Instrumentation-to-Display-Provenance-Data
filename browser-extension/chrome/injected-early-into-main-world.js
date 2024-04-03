@@ -5,9 +5,9 @@ console.log("This is running in the MAIN world, hopefully before all other scrip
 var DEBUGcount = 0;
 var DEBUGinsideXhrResponse = 0;
 
-console.log("About to set up the MutationObserver...");
-const observer = createMutationObserver();
-console.log("Finished setting up the MutationObserver.");
+// console.log("About to set up the MutationObserver...");
+// const observer = createMutationObserver();
+// console.log("Finished setting up the MutationObserver.");
 
 function createMutationObserver() {
     // Select the node that will be observed for mutations
@@ -32,6 +32,7 @@ function makeWrappedListener(oldListener, desc) {
         console.log(`This is running just before the supplied ${desc} handler!`);
         DEBUGcount++;
         DEBUGinsideXhrResponse++;
+        const observer = createMutationObserver();
         const listenerResult = oldListener(...args);
         //TODO: Maybe handle a Promise return value specially?
         console.log(`This is running just after the supplied ${desc} handler!`);
@@ -43,6 +44,7 @@ function makeWrappedListener(oldListener, desc) {
         // });
         console.log(`Eagerly unsetting flag and gathering mutations with takeRecords()!`);
         const mutations = observer.takeRecords();
+        observer.disconnect();
         mutationObserverCallback(mutations);
         DEBUGinsideXhrResponse--;
         console.log(`End of eager mutation processing with takeRecords()!`);
@@ -158,7 +160,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
 
 // Callback function to execute when mutations are observed
 function mutationObserverCallback(mutationList /*, observer*/) {
-    console.log(`MutationObserver callback called, DEBUGinsideXhrResponse=${DEBUGinsideXhrResponse}, DEBUGcount=${DEBUGcount}!`);
+    console.log(`MutationObserver callback called with ${mutationList.length} mutations, DEBUGinsideXhrResponse=${DEBUGinsideXhrResponse}, DEBUGcount=${DEBUGcount}!`);
     for (const mutation of mutationList) {
         if (mutation.type === "childList") {
             console.log("A child node has been added or removed.");
