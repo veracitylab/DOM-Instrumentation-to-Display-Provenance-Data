@@ -171,8 +171,12 @@ function mutationObserverCallback(mutationList /*, observer*/) {
             console.log("A child node has been added or removed.");
             for (const addedNode of mutation.addedNodes) {
                 // console.log(`Setting colour of ${addedNode.type}`);
-                console.log(`Setting colour of `, addedNode);
-                addedNode.style.color = 'red';
+                if (addedNode instanceof HTMLElement) {
+                    console.log(`Setting colour of `, addedNode);
+                    addedNode.style.color = 'red';
+                } else {
+                    console.log(`Ignoring non-HTMLElement node of type`, addedNode.nodeName);
+                }
             }
         } else if (mutation.type === "attributes") {
             console.log(`The ${mutation.attributeName} attribute was modified.`);
