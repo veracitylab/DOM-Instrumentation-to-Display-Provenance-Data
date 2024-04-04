@@ -32,6 +32,7 @@ function makeWrappedListener(oldListener, desc) {
         console.log(`This is running just before the supplied ${desc} handler!`);
         DEBUGcount++;
         DEBUGinsideXhrResponse++;
+        removeHighlightRects('TODO-use-prov-id-here');      //HACK
         const observer = createMutationObserver();
 
         // The browser will supply the actual XMLHttpRequest object in .target and .currentTarget instead of our Proxy of it,
@@ -173,7 +174,8 @@ function mutationObserverCallback(mutationList /*, observer*/) {
                 // console.log(`Setting colour of ${addedNode.type}`);
                 if (addedNode instanceof HTMLElement) {
                     console.log(`Setting colour of `, addedNode);
-                    addedNode.style.color = 'red';
+                    // addedNode.style.color = 'red';
+                    addHighlightRectFor(addedNode, 'TODO-use-prov-id-here');
                 } else {
                     console.log(`Ignoring non-HTMLElement node of type`, addedNode.nodeName);
                 }
@@ -184,7 +186,29 @@ function mutationObserverCallback(mutationList /*, observer*/) {
     }
 };
 
+function addHighlightRectFor(elem, cls) {
+    const rect = elem.getBoundingClientRect();
+    console.log(`Adding highlight rect at `, rect, ` with class ${cls}.`);
+    const div = document.createElement('div');
+    div.classList.add(cls);
+    div.style.position = 'absolute';
+    for (const prop of ['left', 'top', 'width', 'height']) {
+        div.style[prop] = rect[prop];
+    }
+    div.style.backgroundColor = 'yellow';
+    div.style.opacity = '30%';
+    div.style.zIndex = 9999;
 
+    document.body.appendChild(div);
+    return div;
+}
+
+function removeHighlightRects(cls) {
+    console.log(`Removing all highlight rects with class ${cls}.`);
+    for (const elem of document.getElementsByClassName(cls)) {
+        elem.remove();
+    }
+}
 
 
 // Try running it a bit later
