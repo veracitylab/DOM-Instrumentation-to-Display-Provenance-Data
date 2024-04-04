@@ -169,6 +169,11 @@ function mutationObserverCallback(mutationList /*, observer*/) {
     for (const mutation of mutationList) {
         if (mutation.type === "childList") {
             console.log("A child node has been added or removed.");
+            for (const addedNode of mutation.addedNodes) {
+                // console.log(`Setting colour of ${addedNode.type}`);
+                console.log(`Setting colour of `, addedNode);
+                addedNode.style.color = 'red';
+            }
         } else if (mutation.type === "attributes") {
             console.log(`The ${mutation.attributeName} attribute was modified.`);
         }
