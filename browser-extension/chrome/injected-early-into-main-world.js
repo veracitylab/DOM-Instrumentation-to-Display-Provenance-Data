@@ -193,7 +193,7 @@ function addHighlightRectFor(elem, cls) {
     div.classList.add(cls);
     div.style.position = 'absolute';
     for (const prop of ['left', 'top', 'width', 'height']) {
-        div.style[prop] = rect[prop];
+        div.style[prop] = rect[prop] + "px";
     }
     div.style.backgroundColor = 'yellow';
     div.style.opacity = '30%';
