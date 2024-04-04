@@ -198,6 +198,7 @@ function addHighlightRectFor(elem, cls) {
     div.style.backgroundColor = 'yellow';
     div.style.opacity = '30%';
     div.style.zIndex = 9999;
+    div.style.pointerEvents = 'none';
 
     document.body.appendChild(div);
     return div;
