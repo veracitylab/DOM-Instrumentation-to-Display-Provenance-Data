@@ -162,14 +162,25 @@ window.XMLHttpRequest = class XMLHttpRequest {
 
 
 
-// Only keeps elements that are HTMLElements (thus have a client bounding box), and which are still in the document.
+// Text nodes are not HTMLElements or even Elements, so don't support getBoundingClientRect().
+// For a disconnected node this might return null.
+function promoteToNearestHTMLElementAncestor(elem) {
+    while (!(elem instanceof HTMLElement)) {
+        elem = elem.parentNode;
+    }
+
+    return elem;
+}
+
+// Promotes nodes to the nearest HTMLElement ancestor (which have a client bounding box), and which are still in the document.
 function maybeRecordHighlightRectFor(elem, cls) {
+    elem = promoteToNearestHTMLElementAncestor(elem);
     if (elem instanceof HTMLElement && elem.isConnected) {
         console.log(`Adding highlight rect for `, elem);
         // addedNode.style.color = 'red';
         addHighlightRectFor(elem, cls);
     } else {
-        console.log(`Ignoring non-HTMLElement or no-longer-connected node of type`, elem.nodeName);
+        console.log(`Ignoring no-longer-connected node of type`, elem.nodeName);
     }
 }
 
@@ -187,7 +198,8 @@ function mutationObserverCallback(mutationList /*, observer*/) {
             console.log(`The ${mutation.attributeName} attribute was modified.`);
             maybeRecordHighlightRectFor(mutation.target, 'TODO-use-prov-id-here');
         } else if (mutation.type === "characterData") {
-            console.log(`Character data was changed -- though we currently IGNORE THIS!`);
+            console.log(`Character data was changed.`);
+            maybeRecordHighlightRectFor(mutation.target, 'TODO-use-prov-id-here');
         }
     }
 };
