@@ -9,7 +9,7 @@ var DEBUGinsideXhrResponse = 0;
 // const observer = createMutationObserver();
 // console.log("Finished setting up the MutationObserver.");
 
-function createMutationObserver() {
+function createMutationObserver(provId) {
     // Select the node that will be observed for mutations
     const targetNode = document.documentElement;
 
@@ -19,6 +19,9 @@ function createMutationObserver() {
     // Create an observer instance linked to the callback function
     const mutationObserver = new MutationObserver(mutationObserverCallback);
 
+    // Easier to smuggle the provId into the observer object than make a closure
+    mutationObserver.provId = provId;
+
     // Start observing the target node for configured mutations
     mutationObserver.observe(targetNode, config);
 
@@ -27,13 +30,19 @@ function createMutationObserver() {
     return mutationObserver;
 }
 
-function makeWrappedListener(oldListener, desc) {
+function getProvIdFromHeaders(xhr) {
+    return xhr.getResponseHeader('provenance-id');
+}
+
+function makeWrappedListener(oldListener, xhr, desc) {
     return function (e) {
         console.log(`This is running just before the supplied ${desc} handler!`);
+        const provId = getProvIdFromHeaders(xhr);
+        console.log(`This response is associated with prov ID ${provId}`);
         DEBUGcount++;
         DEBUGinsideXhrResponse++;
         removeHighlightRects('TODO-use-prov-id-here');      //HACK
-        const observer = createMutationObserver();
+        const observer = createMutationObserver(provId);
 
         // The browser will supply the actual XMLHttpRequest object in .target and .currentTarget instead of our Proxy of it,
         // which could break the listener if it compares either one to the XMLHttpRequest object it originally created:
@@ -51,7 +60,7 @@ function makeWrappedListener(oldListener, desc) {
         console.log(`Eagerly unsetting flag and gathering mutations with takeRecords()!`);
         const mutations = observer.takeRecords();
         observer.disconnect();
-        mutationObserverCallback(mutations);
+        mutationObserverCallback(mutations, observer);
         DEBUGinsideXhrResponse--;
         console.log(`End of eager mutation processing with takeRecords()!`);
         return listenerResult;
@@ -90,7 +99,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
 
                 if (type === 'readystatechange' || type === 'load') {
                     console.log(`Wrapping the supplied listener for addEventListener(${type})!`);
-                    listener = makeWrappedListener(listener, type);
+                    listener = makeWrappedListener(listener, instance._XMLHttpRequestInstance, type);
                 }
 
                 const result = origAddEventListener(type, listener, optionsOrUseCapture);
@@ -113,7 +122,7 @@ window.XMLHttpRequest = class XMLHttpRequest {
       set(instance, property, value) {
         if ((property === 'onreadystatechange' || property === 'onload') && value) {
             console.log(`Intercepting assignment to ${property}!`);
-            value = makeWrappedListener(value, property);
+            value = makeWrappedListener(value, instance._XMLHttpRequestInstance, property);
         }
 
         // `this` doesn't work inside an object, use `instance` instead
@@ -185,8 +194,8 @@ function maybeRecordHighlightRectFor(elem, cls) {
 }
 
 // Callback function to execute when mutations are observed
-function mutationObserverCallback(mutationList /*, observer*/) {
-    console.log(`MutationObserver callback called with ${mutationList.length} mutations, DEBUGinsideXhrResponse=${DEBUGinsideXhrResponse}, DEBUGcount=${DEBUGcount}!`);
+function mutationObserverCallback(mutationList, observer) {
+    console.log(`MutationObserver callback called for prov ID ${observer.provId} with ${mutationList.length} mutations, DEBUGinsideXhrResponse=${DEBUGinsideXhrResponse}, DEBUGcount=${DEBUGcount}!`);
     for (const mutation of mutationList) {
         if (mutation.type === "childList") {
             console.log("A child node has been added or removed.");
