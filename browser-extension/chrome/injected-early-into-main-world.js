@@ -162,7 +162,16 @@ window.XMLHttpRequest = class XMLHttpRequest {
 
 
 
-
+// Only keeps elements that are HTMLElements (thus have a client bounding box), and which are still in the document.
+function maybeRecordHighlightRectFor(elem, cls) {
+    if (elem instanceof HTMLElement && elem.isConnected) {
+        console.log(`Adding highlight rect for `, elem);
+        // addedNode.style.color = 'red';
+        addHighlightRectFor(elem, cls);
+    } else {
+        console.log(`Ignoring non-HTMLElement or no-longer-connected node of type`, elem.nodeName);
+    }
+}
 
 // Callback function to execute when mutations are observed
 function mutationObserverCallback(mutationList /*, observer*/) {
@@ -172,16 +181,13 @@ function mutationObserverCallback(mutationList /*, observer*/) {
             console.log("A child node has been added or removed.");
             for (const addedNode of mutation.addedNodes) {
                 // console.log(`Setting colour of ${addedNode.type}`);
-                if (addedNode instanceof HTMLElement && addedNode.isConnected) {
-                    console.log(`Setting colour of `, addedNode);
-                    // addedNode.style.color = 'red';
-                    addHighlightRectFor(addedNode, 'TODO-use-prov-id-here');
-                } else {
-                    console.log(`Ignoring non-HTMLElement node of type`, addedNode.nodeName);
-                }
+                maybeRecordHighlightRectFor(addedNode, 'TODO-use-prov-id-here');
             }
         } else if (mutation.type === "attributes") {
             console.log(`The ${mutation.attributeName} attribute was modified.`);
+            maybeRecordHighlightRectFor(mutation.target, 'TODO-use-prov-id-here');
+        } else if (mutation.type === "characterData") {
+            console.log(`Character data was changed -- though we currently IGNORE THIS!`);
         }
     }
 };
