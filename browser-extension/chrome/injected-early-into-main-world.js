@@ -172,7 +172,7 @@ function mutationObserverCallback(mutationList /*, observer*/) {
             console.log("A child node has been added or removed.");
             for (const addedNode of mutation.addedNodes) {
                 // console.log(`Setting colour of ${addedNode.type}`);
-                if (addedNode instanceof HTMLElement) {
+                if (addedNode instanceof HTMLElement && addedNode.isConnected) {
                     console.log(`Setting colour of `, addedNode);
                     // addedNode.style.color = 'red';
                     addHighlightRectFor(addedNode, 'TODO-use-prov-id-here');
