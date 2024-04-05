@@ -14,7 +14,7 @@ function createMutationObserver(provId) {
     const targetNode = document.documentElement;
 
     // Options for the observer (which mutations to observe)
-    const config = { attributes: true, childList: true, subtree: true };
+    const config = { attributes: true, childList: true, subtree: true, characterData: true };
 
     // Create an observer instance linked to the callback function
     const mutationObserver = new MutationObserver(mutationObserverCallback);
@@ -213,8 +213,13 @@ function mutationObserverCallback(mutationList, observer) {
     }
 };
 
-function addHighlightRectFor(elem, cls) {
+function makeHighlightRectDivFor(elem, cls) {
     const rect = elem.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+        console.log(`Ignoring zero-area rect for element `, elem);
+        return undefined;
+    }
+
     console.log(`Adding highlight rect at `, rect, ` with class ${cls}.`);
     const div = document.createElement('div');
     div.classList.add(cls);
@@ -226,9 +231,14 @@ function addHighlightRectFor(elem, cls) {
     div.style.opacity = '30%';
     div.style.zIndex = 9999;
     div.style.pointerEvents = 'none';
-
-    document.body.appendChild(div);
     return div;
+}
+
+function addHighlightRectFor(elem, cls) {
+    const div = makeHighlightRectDivFor(elem, cls);
+    if (div) {
+        document.body.appendChild(div);
+    }
 }
 
 function removeHighlightRects(cls) {
@@ -287,7 +297,7 @@ console.log(`Called send() on XHR for ${exampleUrl}`);
 // console.log("Finished running the example URL XHR immediately.");
 
 console.log("Running the example URL XHR in 5s...");
-setTimeout(later, 5000);
+//setTimeout(later, 5000);
 console.log("Finished running the example URL XHR in 5s.");
 
 console.log("We have proxied XMLHttpRequest!");
