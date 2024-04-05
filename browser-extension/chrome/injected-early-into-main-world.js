@@ -206,7 +206,7 @@ function addHighlightRectFor(elem, cls) {
 
 function removeHighlightRects(cls) {
     console.log(`Removing all highlight rects with class ${cls}.`);
-    for (const elem of document.getElementsByClassName(cls)) {
+    for (const elem of Array.from(document.getElementsByClassName(cls))) {
         elem.remove();
     }
 }
