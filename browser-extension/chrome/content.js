@@ -5,6 +5,8 @@ initialScript.textContent = "console.log('This is running from inside the script
 //document.head.appendChild(initialScript);
 console.log("document object at content script start:", document);
 
+const highlightRectClass = 'vspx-highlight-rect';
+
 // Since we are now being injected ASAP, need to wait until the document finishes loading before we actually run the main code.
 function main() {
     console.log("Content script's main() is now running (hopefully after page loading completed)!");
@@ -36,7 +38,7 @@ function main() {
             const modifiedElems = Array.from(document.querySelectorAll(`.vspx-${provId}`));
             const minimalModifiedElems = keepMinimal(modifiedElems);
             for (const e of minimalModifiedElems) {
-                addHighlightRectFor(e, 'vspx-highlight-rect');
+                addHighlightRectFor(e, highlightRectClass);
             }
         };
     }
@@ -46,7 +48,7 @@ function main() {
         const item = document.createElement("li");
         item.innerHTML = `<a href="${provenanceTabUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
         item.addEventListener('mouseenter', makeHighlightAllModifiedElements(provId));
-        item.addEventListener('mouseleave', () => removeHighlightRects('vspx-highlight-rect'));
+        item.addEventListener('mouseleave', () => removeHighlightRects(highlightRectClass));
         responseList.appendChild(item);
     }
 
@@ -80,7 +82,9 @@ function keepMinimal(elems) {
     }
 
     for (const e of elems) {
-        crossOut(e.parentNode);
+        if (remaining.has(e)) {
+            crossOut(e.parentNode);
+        }
     }
 
     return Array.from(remaining.values());
