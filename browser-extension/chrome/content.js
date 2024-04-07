@@ -15,7 +15,7 @@ function main() {
     provenanceDiv.style.position = 'fixed';
     provenanceDiv.style.top = '10px';
     provenanceDiv.style.left = '10px';
-    provenanceDiv.style.zIndex = '1000'; // Hopefully on top of everything
+    provenanceDiv.style.zIndex = '9990'; // Hopefully on top of everything
     provenanceDiv.style.backgroundColor = 'lightgray';
     provenanceDiv.style.padding = '10px';
     provenanceDiv.style.fontFamily = 'sans-serif';
