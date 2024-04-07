@@ -29,7 +29,7 @@ function main() {
     chrome.runtime.onMessage.addListener((msg) => {
         console.log("Received message: ", msg);
         if (msg.type === 'responseHeader') {
-            addEntry(msg.details.url, msg.details.provId);
+            addEntry(msg.details.url, msg.details.provId, msg.details.method, msg.details.type);
         }
     });
 
@@ -43,12 +43,18 @@ function main() {
         };
     }
 
-    function addEntry(sourceUrl, provId) {
+    function addEntry(sourceUrl, provId, method, type) {
         const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provId + ";" + sourceUrl);
         const item = document.createElement("li");
-        item.innerHTML = `<a href="${provenanceTabUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
+        item.innerHTML = `<a href="${provenanceTabUrl}" target="_blank"><b>${provId}:</b> ${method} ${sourceUrl}</a>`;
         item.addEventListener('mouseenter', makeHighlightAllModifiedElements(provId));
         item.addEventListener('mouseleave', () => removeHighlightRects(highlightRectClass));
+
+        if (type === 'main_frame') {
+            // Need to mark <body> as modified by this HTTP response ourselves
+            document.body.classList.add('vspx-' + provId);
+        }
+
         responseList.appendChild(item);
     }
 

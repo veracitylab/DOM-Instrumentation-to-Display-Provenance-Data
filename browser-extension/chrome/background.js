@@ -44,7 +44,7 @@ async function responseUrls(details) {
         });
       }
   
-      await enqueueCriticalSection(() => sendOrQueue(details.tabId, { type: "responseHeader", details: { url: details.url, provId: provIdInfo.value } }));
+      await enqueueCriticalSection(() => sendOrQueue(details.tabId, { type: "responseHeader", details: { url: details.url, provId: provIdInfo.value, method: details.method, type: details.type } }));
     } else {
       console.log("Ignoring provenance-free message");
     }
