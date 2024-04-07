@@ -41,7 +41,6 @@ function makeWrappedListener(oldListener, xhr, desc) {
         console.log(`This response is associated with prov ID ${provId}`);
         DEBUGcount++;
         DEBUGinsideXhrResponse++;
-        removeHighlightRects('TODO-use-prov-id-here');      //HACK
         const observer = createMutationObserver(provId);
 
         // The browser will supply the actual XMLHttpRequest object in .target and .currentTarget instead of our Proxy of it,

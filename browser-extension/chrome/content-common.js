@@ -11,7 +11,7 @@ function makeHighlightRectDivFor(elem, cls) {
         return undefined;
     }
 
-    rect = expandRect(rect, 30);     // A thin border helps visibility for images
+    rect = expandRect(rect, 3);     // A thin border helps visibility for images
 
     console.log(`Adding highlight rect at `, rect, ` with class ${cls}.`);
     const div = document.createElement('div');
