@@ -24,7 +24,7 @@
         "<all_urls>"
       ],
       "js": [
-        "content-common-COPY.js",
+        "content-common.js",
         "content.js"
       ],
       "run_at": "document_start"
@@ -34,7 +34,6 @@
         "<all_urls>"
       ],
       "js": [
-        "content-common.js",
         "injected-early-into-main-world.js"
       ],
       "run_at": "document_start",

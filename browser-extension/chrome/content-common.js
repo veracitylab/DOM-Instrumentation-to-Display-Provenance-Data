@@ -1,11 +1,17 @@
 console.log("content-commons.js running!");
 
+function expandRect(rect, px) {
+    return { left: rect.left - px, top: rect.top - px, width: rect.width + 2 * px, height: rect.height + 2 * px };
+}
+
 function makeHighlightRectDivFor(elem, cls) {
-    const rect = elem.getBoundingClientRect();
+    let rect = elem.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
         console.log(`Ignoring zero-area rect for element `, elem);
         return undefined;
     }
+
+    rect = expandRect(rect, 30);     // A thin border helps visibility for images
 
     console.log(`Adding highlight rect at `, rect, ` with class ${cls}.`);
     const div = document.createElement('div');
