@@ -185,9 +185,11 @@ function promoteToNearestHTMLElementAncestor(elem) {
 function maybeRecordHighlightRectFor(elem, cls) {
     elem = promoteToNearestHTMLElementAncestor(elem);
     if (elem instanceof HTMLElement && elem.isConnected) {
-        console.log(`Adding highlight rect for `, elem);
+        // console.log(`Adding highlight rect for `, elem);
+        console.log(`Recording class ${cls} for `, elem);
         // addedNode.style.color = 'red';
-        addHighlightRectFor(elem, cls);
+        // addHighlightRectFor(elem, cls);
+        elem.classList.add(cls);
     } else {
         console.log(`Ignoring no-longer-connected node of type`, elem.nodeName);
     }
@@ -195,20 +197,22 @@ function maybeRecordHighlightRectFor(elem, cls) {
 
 // Callback function to execute when mutations are observed
 function mutationObserverCallback(mutationList, observer) {
-    console.log(`MutationObserver callback called for prov ID ${observer.provId} with ${mutationList.length} mutations, DEBUGinsideXhrResponse=${DEBUGinsideXhrResponse}, DEBUGcount=${DEBUGcount}!`);
+    const provId = observer.provId;
+    const provAttr = 'vspx-' + provId;
+    console.log(`MutationObserver callback called for prov ID ${provId} with ${mutationList.length} mutations, DEBUGinsideXhrResponse=${DEBUGinsideXhrResponse}, DEBUGcount=${DEBUGcount}!`);
     for (const mutation of mutationList) {
         if (mutation.type === "childList") {
             console.log("A child node has been added or removed.");
             for (const addedNode of mutation.addedNodes) {
                 // console.log(`Setting colour of ${addedNode.type}`);
-                maybeRecordHighlightRectFor(addedNode, 'TODO-use-prov-id-here');
+                maybeRecordHighlightRectFor(addedNode, provAttr);
             }
         } else if (mutation.type === "attributes") {
             console.log(`The ${mutation.attributeName} attribute was modified.`);
-            maybeRecordHighlightRectFor(mutation.target, 'TODO-use-prov-id-here');
+            maybeRecordHighlightRectFor(mutation.target, provAttr);
         } else if (mutation.type === "characterData") {
             console.log(`Character data was changed.`);
-            maybeRecordHighlightRectFor(mutation.target, 'TODO-use-prov-id-here');
+            maybeRecordHighlightRectFor(mutation.target, provAttr);
         }
     }
 };

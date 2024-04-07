@@ -31,10 +31,21 @@ function main() {
         }
     });
 
+    function makeHighlightAllModifiedElements(provId) {
+        return function() {
+            const modifiedElems = Array.from(document.querySelectorAll(`.vspx-${provId}`));
+            for (const e of modifiedElems) {
+                addHighlightRectFor(e, 'vspx-highlight-rect');
+            }
+        };
+    }
+
     function addEntry(sourceUrl, provId) {
         const provenanceTabUrl = chrome.runtime.getURL("provenance-tab.html") + "#" + encodeURIComponent(provId + ";" + sourceUrl);
         const item = document.createElement("li");
         item.innerHTML = `<a href="${provenanceTabUrl}" target="_blank"><b>${provId}:</b> ${sourceUrl}</a>`;
+        item.addEventListener('mouseenter', makeHighlightAllModifiedElements(provId));
+        item.addEventListener('mouseleave', () => removeHighlightRects('vspx-highlight-rect'));
         responseList.appendChild(item);
     }
 
@@ -55,6 +66,42 @@ function main() {
     console.log("Content script about to send ready message...");
     chrome.runtime.sendMessage({ type: "ready" });
     console.log("Content script has sent the ready message!");
+}
+
+//TODO: Copied from injected-early-into-main-world.js, doesn't need to be in both
+function makeHighlightRectDivFor(elem, cls) {
+    const rect = elem.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+        console.log(`Ignoring zero-area rect for element `, elem);
+        return undefined;
+    }
+
+    console.log(`Adding highlight rect at `, rect, ` with class ${cls}.`);
+    const div = document.createElement('div');
+    div.classList.add(cls);
+    div.style.position = 'absolute';
+    for (const prop of ['left', 'top', 'width', 'height']) {
+        div.style[prop] = rect[prop] + "px";
+    }
+    div.style.backgroundColor = 'yellow';
+    div.style.opacity = '30%';
+    div.style.zIndex = 9999;
+    div.style.pointerEvents = 'none';
+    return div;
+}
+
+function addHighlightRectFor(elem, cls) {
+    const div = makeHighlightRectDivFor(elem, cls);
+    if (div) {
+        document.body.appendChild(div);
+    }
+}
+
+function removeHighlightRects(cls) {
+    console.log(`Removing all highlight rects with class ${cls}.`);
+    for (const elem of Array.from(document.getElementsByClassName(cls))) {
+        elem.remove();
+    }
 }
 
 window.addEventListener('DOMContentLoaded', main);
