@@ -34,7 +34,8 @@ function main() {
     function makeHighlightAllModifiedElements(provId) {
         return function() {
             const modifiedElems = Array.from(document.querySelectorAll(`.vspx-${provId}`));
-            for (const e of modifiedElems) {
+            const minimalModifiedElems = keepMinimal(modifiedElems);
+            for (const e of minimalModifiedElems) {
                 addHighlightRectFor(e, 'vspx-highlight-rect');
             }
         };
@@ -66,6 +67,23 @@ function main() {
     console.log("Content script about to send ready message...");
     chrome.runtime.sendMessage({ type: "ready" });
     console.log("Content script has sent the ready message!");
+}
+
+function keepMinimal(elems) {
+    const remaining = new Set(elems);
+
+    function crossOut(e) {
+        if (e) {
+            remaining.delete(e);
+            crossOut(e.parentNode);
+        }
+    }
+
+    for (const e of elems) {
+        crossOut(e.parentNode);
+    }
+
+    return Array.from(remaining.values());
 }
 
 //TODO: Copied from injected-early-into-main-world.js, doesn't need to be in both
