@@ -1,5 +1,10 @@
 console.log("content-commons.js running!");
 
+function adjustForScrolling(rect, outerElem) {
+    const outer = outerElem.getBoundingClientRect();
+    return { left: rect.left - outer.left, top: rect.top - outer.top, width: rect.width, height: rect.height };
+}
+
 function expandRect(rect, px) {
     return { left: rect.left - px, top: rect.top - px, width: rect.width + 2 * px, height: rect.height + 2 * px };
 }
@@ -11,7 +16,7 @@ function makeHighlightRectDivFor(elem, cls) {
         return undefined;
     }
 
-    rect = expandRect(rect, 3);     // A thin border helps visibility for images
+    rect = expandRect(adjustForScrolling(rect, document.body), 3);     // A thin border helps visibility for images
 
     console.log(`Adding highlight rect at `, rect, ` with class ${cls}.`);
     const div = document.createElement('div');
