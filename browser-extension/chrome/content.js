@@ -59,8 +59,8 @@ function main() {
                 popupProvenanceDiv.remove();
             });
             const popupResponseList = document.createElement("ul");
-            
-            const modifyingProvIds = findModifyingResponses(contextMenuClickedOn);
+
+            const modifyingProvIds = findModifyingProvIds(contextMenuClickedOn);
             popupProvenanceDiv.appendChild(popupResponseList);
             for (const provId of modifyingProvIds) {
                 console.log(`Modified by HTTP response with prov ID ${provId}`);
@@ -135,14 +135,21 @@ function keepMinimal(elems) {
     return Array.from(remaining.values());
 }
 
-function findModifyingResponses(elem) {
-    const provIds = new Set();
+// A provenance ID provId is considered to have modified an element elem iff:
+// 1. elem, or some ancestor of it, has vspx-${provId} as a class, and
+// 2. The nearest such ancestor is "minimal" (has no proper descendants that also have vspx-${provId} as a class).
+// This is the same criterion used for highlighting elements modified by a specific provId.
+function findModifyingProvIds(elem) {
+    const lowestElemForProvId = new Map();
 
     while (elem) {
         if (elem instanceof Element) {
             for (const cls of elem.classList.values()) {
                 if (cls.startsWith('vspx-')) {
-                    provIds.add(cls.substring(5));
+                    const provId = cls.substring(5);
+                    if (!lowestElemForProvId.has(provId)) {
+                        lowestElemForProvId.set(provId, elem);
+                    }
                 }
             }
         }
@@ -150,7 +157,9 @@ function findModifyingResponses(elem) {
         elem = elem.parentNode;
     }
 
-    return Array.from(provIds.values());
+    // Using querySelector() should be faster than finding all descendants and then running keepMinimal()
+    const provIdsWithMinimalElems = Array.from(lowestElemForProvId.entries()).filter(([k, v]) => !v.querySelector(`:scope .vspx-${k}`)).map(([k, v]) => k);
+    return provIdsWithMinimalElems;
 }
 
 window.addEventListener('DOMContentLoaded', main);
