@@ -16,7 +16,8 @@
     "nativeMessaging",
     "webRequest",
     "activeTab",
-    "tabs"
+    "tabs",
+    "contextMenus"
   ],
   "content_scripts": [
     {
@@ -24,8 +25,20 @@
         "<all_urls>"
       ],
       "js": [
+        "content-common.js",
         "content.js"
-      ]
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "injected-early-into-main-world.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ],
   "web_accessible_resources": [
