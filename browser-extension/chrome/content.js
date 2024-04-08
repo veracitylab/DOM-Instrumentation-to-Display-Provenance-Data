@@ -22,7 +22,7 @@ function main() {
     provenanceDiv.style.backgroundColor = 'lightgray';
     provenanceDiv.style.padding = '10px';
     provenanceDiv.style.fontFamily = 'sans-serif';
-    provenanceDiv.innerHTML = '<span style="color: red; font-weight: bold"">▶ Prov</span>';
+    provenanceDiv.innerHTML = '<span style="color: red; font-weight: bold; cursor: pointer">▶ Prov</span>';
     const provButton = provenanceDiv.children[0];
     const responseList = document.createElement("ul");
     responseList.style.display = 'none';
@@ -48,6 +48,7 @@ function main() {
             provenanceDataById.set(msg.details.provId, { url: msg.details.url, method: msg.details.method, type: msg.details.type });
         } else if (msg.type === 'contextMenuClicked') {
             console.log(`Background worker reports context menu clicked! contextMenuClickedOn=`, contextMenuClickedOn);
+            const name = getNameFor(contextMenuClickedOn);
             const popupProvenanceDiv = document.createElement("div");
             popupProvenanceDiv.style.position = 'fixed';
             popupProvenanceDiv.style.top = contextMenuClickedPos.y + 'px';
@@ -56,7 +57,7 @@ function main() {
             popupProvenanceDiv.style.backgroundColor = 'lightgreen';
             popupProvenanceDiv.style.padding = '10px';
             popupProvenanceDiv.style.fontFamily = 'sans-serif';
-            popupProvenanceDiv.innerHTML = '<span style="color: red; font-weight: bold"">Prov for clicked element X</span>';      //TODO: Better title
+            popupProvenanceDiv.innerHTML = `<span style="color: red; font-weight: bold; cursor: pointer">🞭 </span><span style="color: red; font-weight: bold">Prov for clicked element ${name}</span>`;
             popupProvenanceDiv.children[0].addEventListener("click", () => {
                 popupProvenanceDiv.remove();
             });
@@ -162,6 +163,10 @@ function findModifyingProvIds(elem) {
     // Using querySelector() should be faster than finding all descendants and then running keepMinimal()
     const provIdsWithMinimalElems = Array.from(lowestElemForProvId.entries()).filter(([k, v]) => !v.querySelector(`:scope .vspx-${k}`)).map(([k, v]) => k);
     return provIdsWithMinimalElems;
+}
+
+function getNameFor(elem) {
+    return elem.nodeName;
 }
 
 window.addEventListener('DOMContentLoaded', main);
