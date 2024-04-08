@@ -7,6 +7,7 @@ console.log("document object at content script start:", document);
 
 const highlightRectClass = 'vspx-highlight-rect';
 let contextMenuClickedOn;
+let contextMenuClickedPos;
 const provenanceDataById = new Map();
 
 // Since we are now being injected ASAP, need to wait until the document finishes loading before we actually run the main code.
@@ -31,6 +32,7 @@ function main() {
     document.addEventListener('contextmenu', (e) => {
         console.log(`Received a contextmenu message on element `, e.target);
         contextMenuClickedOn = e.target;
+        contextMenuClickedPos = { x: e.clientX, y: e.clientY };
     });
 
     chrome.runtime.onMessage.addListener((msg) => {
@@ -48,8 +50,8 @@ function main() {
             console.log(`Background worker reports context menu clicked! contextMenuClickedOn=`, contextMenuClickedOn);
             const popupProvenanceDiv = document.createElement("div");
             popupProvenanceDiv.style.position = 'fixed';
-            popupProvenanceDiv.style.top = '100px';     //TODO: Replace with position of right-click
-            popupProvenanceDiv.style.left = '100px';    //TODO: Replace with position of right-click
+            popupProvenanceDiv.style.top = contextMenuClickedPos.y + 'px';
+            popupProvenanceDiv.style.left = contextMenuClickedPos.x + 'px';
             popupProvenanceDiv.style.zIndex = '9990'; // Hopefully on top of everything
             popupProvenanceDiv.style.backgroundColor = 'lightgreen';
             popupProvenanceDiv.style.padding = '10px';
