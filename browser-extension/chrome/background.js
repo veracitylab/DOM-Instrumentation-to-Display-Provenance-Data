@@ -69,6 +69,17 @@ chrome.runtime.onMessage.addListener(async (msg, sender) => {
   }
 });
 
+// Create a parent item and two children.
+const contextMenu = chrome.contextMenus.create({
+  title: 'View provenance',
+  id: 'viewProvenance'
+});
+
+chrome.contextMenus.onClicked.addListener(async (clickInfo, tab) => {
+  console.log(`Context menu clicked!`);
+  await enqueueCriticalSection(() => sendOrQueue(tab.id, { type: "contextMenuClicked", details: {} }));
+});
+
 async function sendOrQueue(tabId, msg) {
   const readyTabs = await getReadyTabs();
   if (readyTabs.has(tabId)) {

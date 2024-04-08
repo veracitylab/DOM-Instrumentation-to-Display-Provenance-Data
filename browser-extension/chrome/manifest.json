@@ -16,7 +16,8 @@
     "nativeMessaging",
     "webRequest",
     "activeTab",
-    "tabs"
+    "tabs",
+    "contextMenus"
   ],
   "content_scripts": [
     {
