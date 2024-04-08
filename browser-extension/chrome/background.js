@@ -69,7 +69,6 @@ chrome.runtime.onMessage.addListener(async (msg, sender) => {
   }
 });
 
-// Create a parent item and two children.
 const contextMenu = chrome.contextMenus.create({
   title: 'View provenance',
   id: 'viewProvenance'

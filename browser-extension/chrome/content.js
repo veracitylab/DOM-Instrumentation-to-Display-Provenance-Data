@@ -7,6 +7,7 @@ console.log("document object at content script start:", document);
 
 const highlightRectClass = 'vspx-highlight-rect';
 let contextMenuClickedOn;
+const provenanceDataById = new Map();
 
 // Since we are now being injected ASAP, need to wait until the document finishes loading before we actually run the main code.
 function main() {
@@ -41,12 +42,34 @@ function main() {
                 // Need to mark <body> as modified by this HTTP response ourselves
                 document.body.classList.add('vspx-' + msg.details.provId);
             }
+
+            provenanceDataById.set(msg.details.provId, { url: msg.details.url, method: msg.details.method, type: msg.details.type });
         } else if (msg.type === 'contextMenuClicked') {
             console.log(`Background worker reports context menu clicked! contextMenuClickedOn=`, contextMenuClickedOn);
-            const modifyingResponses = findModifyingResponses(contextMenuClickedOn);
-            for (const r of modifyingResponses) {
-                console.log(`Modified by HTTP response with prov ID ${r}`);
+            const popupProvenanceDiv = document.createElement("div");
+            popupProvenanceDiv.style.position = 'fixed';
+            popupProvenanceDiv.style.top = '100px';     //TODO: Replace with position of right-click
+            popupProvenanceDiv.style.left = '100px';    //TODO: Replace with position of right-click
+            popupProvenanceDiv.style.zIndex = '9990'; // Hopefully on top of everything
+            popupProvenanceDiv.style.backgroundColor = 'lightgreen';
+            popupProvenanceDiv.style.padding = '10px';
+            popupProvenanceDiv.style.fontFamily = 'sans-serif';
+            popupProvenanceDiv.innerHTML = '<span style="color: red; font-weight: bold"">Prov for clicked element X</span>';      //TODO: Better title
+            popupProvenanceDiv.children[0].addEventListener("click", () => {
+                popupProvenanceDiv.remove();
+            });
+            const popupResponseList = document.createElement("ul");
+            
+            const modifyingProvIds = findModifyingResponses(contextMenuClickedOn);
+            popupProvenanceDiv.appendChild(popupResponseList);
+            for (const provId of modifyingProvIds) {
+                console.log(`Modified by HTTP response with prov ID ${provId}`);
+                const provInfo = provenanceDataById.get(provId);
+                const entry = makeEntry(provInfo.url, provId, provInfo.method, provInfo.type);
+                popupResponseList.appendChild(entry);
             }
+
+            document.body.appendChild(popupProvenanceDiv);
         }
     });
 
