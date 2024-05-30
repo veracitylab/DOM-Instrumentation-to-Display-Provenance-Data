@@ -25,7 +25,7 @@ function tableRow(elems) {
 }
 
 function renderHttpRequestApacheGet(httpRequestApacheGet) {
-    return "<pre>GET " + httpRequestApacheGet.value + "</pre>";
+    return `<pre style="color: #FF0000; font-weight: bold">GET ` + httpRequestApacheGet.value + "</pre>";
 }
 
 const entityHandlers = {
@@ -33,7 +33,7 @@ const entityHandlers = {
 };
 
 function renderAssociatedEntities(entities) {
-    return wrap(entities.map((e) => e.type in entityHandlers ? entityHandlers[e.type](e) : `Unrecognised entity of type ${e.type} created using ${e.value}`), 'ul', 'li');
+    return entities.map((e) => e.type in entityHandlers ? entityHandlers[e.type](e) : `Unrecognised entity of type ${e.type} created using ${e.value}`).join("<br />");
 }
 
 function renderProvenanceHtml(sourceUrl, provId, provData) {
