@@ -24,11 +24,23 @@ function tableRow(elems) {
     return wrap(elems, "tr", "td");
 }
 
+function renderHttpRequestApacheGet(httpRequestApacheGet) {
+    return `<pre style="color: #FF0000; font-weight: bold">GET ` + httpRequestApacheGet.value + "</pre>";
+}
+
+const entityHandlers = {
+    HttpRequestApacheGet: renderHttpRequestApacheGet
+};
+
+function renderAssociatedEntities(entities) {
+    return entities.map((e) => e.type in entityHandlers ? entityHandlers[e.type](e) : `Unrecognised entity of type ${e.type} created using ${e.value}`).join("<br />");
+}
+
 function renderProvenanceHtml(sourceUrl, provId, provData) {
     return `<h1>Provenance Information</h1><ul><li><b>Source URL:</b> ${sourceUrl}</li><li><b>Provenance ID:</b> ${provId}</li></ul>` +
         "<table>" +
-        tableHeaderRow(["Activity Type", "End Time"]) +
-        provData.map((e) => tableRow([e.activities[0].type, e.activities[0].endTime])).join("") +
+        tableHeaderRow(["Activity Type", "End Time", "Associated Data"]) +
+        provData.map((e) => tableRow([e.activities[0].type, e.activities[0].endTime, renderAssociatedEntities(e.associatedEntities)])).join("") +
         "</table>";
 }
 
