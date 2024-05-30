@@ -84,7 +84,8 @@ window.XMLHttpRequest = class XMLHttpRequest {
           // Modify the response string
           // `this` doesn't work inside an object, use `instance` instead
         //   return instance._XMLHttpRequestInstance.responseText.replace("Barbarian", "IT WORKED!")
-        return instance._XMLHttpRequestInstance.responseText.replace('"title":"', '"title":"IT WORKED!')
+        // return instance._XMLHttpRequestInstance.responseText.replace('"title":"', '"title":"IT WORKED!')
+        return instance._XMLHttpRequestInstance.responseText;
 
           // Or return whatever you want
           return "whatever you wanted"
