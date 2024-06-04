@@ -38,14 +38,16 @@ function main() {
     chrome.runtime.onMessage.addListener((msg) => {
         console.log("Received message: ", msg);
         if (msg.type === 'responseHeader') {
-            addEntry(msg.details.url, msg.details.provId, msg.details.method, msg.details.type);
+            if (shouldKeepResponse(msg.details)) {
+                addEntry(msg.details.url, msg.details.provId, msg.details.method, msg.details.type);
 
-            if (msg.details.type === 'main_frame') {
-                // Need to mark <body> as modified by this HTTP response ourselves
-                document.body.classList.add('vspx-' + msg.details.provId);
+                if (msg.details.type === 'main_frame') {
+                    // Need to mark <body> as modified by this HTTP response ourselves
+                    document.body.classList.add('vspx-' + msg.details.provId);
+                }
+
+                provenanceDataById.set(msg.details.provId, { url: msg.details.url, method: msg.details.method, type: msg.details.type });
             }
-
-            provenanceDataById.set(msg.details.provId, { url: msg.details.url, method: msg.details.method, type: msg.details.type });
         } else if (msg.type === 'contextMenuClicked') {
             console.log(`Background worker reports context menu clicked! contextMenuClickedOn=`, contextMenuClickedOn);
             const name = getNameFor(contextMenuClickedOn);
@@ -167,6 +169,13 @@ function findModifyingProvIds(elem) {
 
 function getNameFor(elem) {
     return elem.nodeName;
+}
+
+function shouldKeepResponse(response) {
+    //TODO: Probably better to keep only responses that contain non-empty provenance data -- but determining that requires doing a separate fetch, which
+    // currently also deletes the provenance data server-side, meaning a subsequent fetch to load the page will fail. So for now, just remove obvious noise.
+    console.log(`shouldKeepResponse(url=<${response.url}>, type=<${response.type}>) called.`);  //DEBUG
+    return !response.url.match(/\.(?:css|js|png|jpg|ico)$/) && response.type !== 'font';
 }
 
 window.addEventListener('DOMContentLoaded', main);
